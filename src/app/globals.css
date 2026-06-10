@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --background-soft: #fafbff;
+  --purple-soft: #f1ecff;
+  --purple-main: #b8a7ff;
+  --purple-strong: #8e74ff;
+  --blue-soft: #eaf6ff;
+  --blue-main: #b8e1ff;
+  --text-main: #1c1c1e;
+  --text-muted: #6b7280;
+  --border-soft: #eef2f7;
+  --font-heading:
+    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(184, 167, 255, 0.12), transparent 28%),
+    radial-gradient(circle at top right, rgba(184, 225, 255, 0.16), transparent 24%),
+    var(--background);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+h7 {
+  font-family: var(--font-heading);
+}
+
+* {
+  border-color: var(--border-soft);
+}
+
+::selection {
+  background: rgba(142, 116, 255, 0.16);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-soft: var(--background-soft);
+  --color-purple-soft: var(--purple-soft);
+  --color-purple-main: var(--purple-main);
+  --color-purple-strong: var(--purple-strong);
+  --color-blue-soft: var(--blue-soft);
+  --color-blue-main: var(--blue-main);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-border-soft: var(--border-soft);
+}
