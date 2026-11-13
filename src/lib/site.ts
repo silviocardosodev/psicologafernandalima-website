@@ -17,8 +17,9 @@ export function whatsappLink(message: string = site.defaultMessage) {
 }
 
 export const navItems = [
-  { id: "ajuda", label: "Como ajudo" },
+  { id: "ajuda", label: "Como posso ajudar" },
   { id: "jornada", label: "Como funciona" },
+  { id: "terapia-online", label: "Terapia online" },
   { id: "sobre", label: "Sobre mim" },
   { id: "duvidas", label: "Dúvidas" },
 ] as const;

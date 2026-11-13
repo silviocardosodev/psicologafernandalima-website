@@ -25,13 +25,17 @@
   --color-lavender: #747ff5;
   --color-lavender-soft: #f3efff;
 
-  /* Soft pastel fills (humanised layer, inspired by calm editorial sites) */
+  /* Soft fills — purple / lilac / white family only */
   --color-tint-indigo: #eef0ff;
   --color-tint-lilac: #f4efff;
-  --color-tint-sky: #e9f2ff;
-  --color-tint-mint: #e8f6f0;
-  --color-tint-rose: #fdf0f4;
-  --color-tint-sand: #fbf4ea;
+  --color-tint-violet: #ece8ff;
+  --color-tint-orchid: #f7efff;
+  --color-tint-mist: #f8f7ff;
+  /* legacy aliases kept so nothing renders off-palette */
+  --color-tint-sky: var(--color-tint-violet);
+  --color-tint-mint: var(--color-tint-mist);
+  --color-tint-rose: var(--color-tint-orchid);
+  --color-tint-sand: var(--color-tint-mist);
 
   --color-success-bg: #e8f7ee;
   --color-success: #166534;
@@ -49,7 +53,7 @@
   --gradient-hero: radial-gradient(circle at 85% 10%, rgb(255 255 255 / 14%) 0, transparent 40%),
     linear-gradient(155deg, #4f46e5 0%, #312e81 100%);
   --gradient-soft: radial-gradient(70% 60% at 0% 0%, #f4efff 0%, transparent 70%),
-    radial-gradient(60% 60% at 100% 0%, #e9f2ff 0%, transparent 70%), #ffffff;
+    radial-gradient(60% 60% at 100% 0%, #ece8ff 0%, transparent 70%), #ffffff;
   --gradient-progress: linear-gradient(90deg, #6f82ff, #8d6ffc);
   --gradient-brand: linear-gradient(145deg, #d8d4ff 0%, #969dff 34%, #747ff5 68%, #6250d6 100%);
 
@@ -83,6 +87,9 @@
   --color-tint-mint: var(--color-tint-mint);
   --color-tint-rose: var(--color-tint-rose);
   --color-tint-sand: var(--color-tint-sand);
+  --color-tint-violet: var(--color-tint-violet);
+  --color-tint-orchid: var(--color-tint-orchid);
+  --color-tint-mist: var(--color-tint-mist);
   --color-success: var(--color-success);
   --color-success-bg: var(--color-success-bg);
   --color-warning: var(--color-warning);

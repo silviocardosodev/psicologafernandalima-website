@@ -2,16 +2,35 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+} from "framer-motion";
 import { Menu, X } from "lucide-react";
 
 import { BrandMark } from "@/components/ui/BrandMark";
 import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Section";
+import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { cn } from "@/lib/utils";
 import { navItems, site, whatsappLink } from "@/lib/site";
 
 const DRAWER_ID = "menu-mobile";
+const SPRING = { type: "spring", stiffness: 300, damping: 22 } as const;
+const PILL_SPRING = { type: "spring", stiffness: 380, damping: 32 } as const;
+
+/** Short helper line under each drawer item (≤ 5 words). */
+const subtitles: Record<(typeof navItems)[number]["id"], string> = {
+  ajuda: "Ansiedade, relações e mais",
+  jornada: "Do primeiro contato à sessão",
+  "terapia-online": "De onde você estiver",
+  sobre: "Minha formação e abordagem",
+  duvidas: "Respostas para perguntas comuns",
+};
 
 /** Tracks which nav section is currently crossing the middle band of the viewport. */
 function useActiveSection(ids: readonly string[]) {
@@ -68,7 +87,8 @@ export function Header() {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
 
-  const { scrollY } = useScroll();
+  const { scrollY, scrollYProgress } = useScroll();
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 140, damping: 28, restDelta: 0.001 });
 
   useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 8));
   useEffect(() => setScrolled(window.scrollY > 8), []);
@@ -149,6 +169,8 @@ export function Header() {
     };
   }, [open]);
 
+  const press = reduce ? { duration: 0 } : SPRING;
+
   return (
     <>
       <header
@@ -157,31 +179,32 @@ export function Header() {
           scrolled ? "border-line-soft bg-white/85 backdrop-blur-xl" : "border-transparent bg-transparent",
         )}
       >
-        <Container className="flex h-full items-center justify-between gap-6">
+        <Container className="flex h-full items-center justify-between gap-4">
           <Wordmark />
 
           <nav aria-label="Navegação principal" className="hidden lg:block">
-            <ul className="flex items-center gap-8">
+            <ul className="flex items-center gap-0.5">
               {navItems.map((item) => {
                 const isActive = active === item.id;
                 return (
-                  <li key={item.id}>
+                  <li key={item.id} className="relative">
+                    {isActive && (
+                      <motion.span
+                        layoutId="nav-active-pill"
+                        aria-hidden
+                        className="absolute inset-0 rounded-full bg-tint-lilac"
+                        transition={reduce ? { duration: 0 } : PILL_SPRING}
+                      />
+                    )}
                     <Link
                       href={`#${item.id}`}
                       aria-current={isActive ? "location" : undefined}
                       className={cn(
-                        "relative block rounded-sm py-1 text-[14.5px] transition-colors duration-150",
+                        "relative z-10 block rounded-full px-3 py-1.5 text-[14px] whitespace-nowrap transition-colors duration-300 ease-out-soft focus-visible:shadow-focus",
                         isActive ? "text-primary" : "text-ink-soft hover:text-ink",
                       )}
                     >
                       {item.label}
-                      <span
-                        aria-hidden
-                        className={cn(
-                          "absolute -bottom-1.5 left-1/2 size-1 -translate-x-1/2 rounded-full bg-primary transition-opacity duration-200",
-                          isActive ? "opacity-100" : "opacity-0",
-                        )}
-                      />
                     </Link>
                   </li>
                 );
@@ -190,9 +213,16 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <ButtonLink href="#agendar" size="md" className="hidden sm:inline-flex">
-              Agendar
-            </ButtonLink>
+            <motion.div
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={press}
+              className="hidden sm:block lg:hidden xl:block"
+            >
+              <ButtonLink href="#agendar" size="md" className="hover:translate-y-0 active:translate-y-0">
+                Agendar sessão
+              </ButtonLink>
+            </motion.div>
             <button
               ref={menuButtonRef}
               type="button"
@@ -200,13 +230,20 @@ export function Header() {
               aria-expanded={open}
               aria-controls={DRAWER_ID}
               aria-haspopup="dialog"
-              className="grid size-11 place-items-center rounded-full text-ink transition-colors duration-150 hover:bg-white/70 focus-visible:shadow-focus lg:hidden"
+              className="grid size-11 place-items-center rounded-full text-ink transition-colors duration-300 hover:bg-tint-lilac focus-visible:shadow-focus lg:hidden"
             >
               <Menu className="size-5" aria-hidden />
               <span className="sr-only">Abrir menu</span>
             </button>
           </div>
         </Container>
+
+        {/* Reading progress */}
+        <motion.div
+          aria-hidden
+          className="absolute inset-x-0 -bottom-px h-[2px] origin-left bg-progress"
+          style={{ scaleX: reduce ? scrollYProgress : smoothProgress }}
+        />
       </header>
 
       <AnimatePresence>
@@ -217,63 +254,85 @@ export function Header() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: reduce ? 0 : 0.2 }}
+            transition={{ duration: reduce ? 0 : 0.25 }}
           >
-            <div aria-hidden className="absolute inset-0 bg-ink/20 backdrop-blur-sm" onClick={close} />
+            <div aria-hidden className="absolute inset-0 bg-primary-deep/15 backdrop-blur-sm" onClick={close} />
             <motion.div
               ref={drawerRef}
               id={DRAWER_ID}
               role="dialog"
               aria-modal="true"
               aria-label="Menu de navegação"
-              className="absolute inset-y-0 right-0 flex w-full max-w-[400px] flex-col overflow-y-auto bg-white sm:rounded-l-3xl"
+              className="absolute inset-y-0 right-0 flex w-full max-w-[400px] flex-col overflow-y-auto bg-white sm:rounded-l-[2rem]"
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
-              exit={reduce ? { opacity: 0 } : { x: "100%" }}
-              transition={{ duration: reduce ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
+              exit={{ x: "100%" }}
+              transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 300, damping: 32 }}
             >
               <div className="flex h-[var(--header-height)] shrink-0 items-center justify-between px-5 sm:px-6">
                 <Wordmark onClick={closeForNavigation} />
                 <button
                   type="button"
                   onClick={close}
-                  className="grid size-11 place-items-center rounded-full text-ink transition-colors duration-150 hover:bg-surface-hover focus-visible:shadow-focus"
+                  className="grid size-11 place-items-center rounded-full text-ink transition-colors duration-300 hover:bg-tint-lilac focus-visible:shadow-focus"
                 >
                   <X className="size-5" aria-hidden />
                   <span className="sr-only">Fechar menu</span>
                 </button>
               </div>
 
-              <nav aria-label="Navegação mobile" className="px-5 pt-8 sm:px-6">
+              <nav aria-label="Navegação mobile" className="px-3 pt-6 sm:px-4">
                 <ul className="flex flex-col gap-1">
                   {navItems.map((item, index) => {
                     const isActive = active === item.id;
                     return (
-                      <li key={item.id}>
+                      <motion.li
+                        key={item.id}
+                        initial={{ opacity: 0, x: 24 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={reduce ? { duration: 0 } : { ...SPRING, delay: 0.08 + index * 0.05 }}
+                      >
                         <Link
                           href={`#${item.id}`}
                           onClick={closeForNavigation}
                           data-autofocus={index === 0 ? "" : undefined}
                           aria-current={isActive ? "location" : undefined}
                           className={cn(
-                            "block rounded-lg py-2.5 text-[28px] leading-tight font-normal tracking-[-0.02em] transition-colors duration-150",
-                            isActive ? "text-primary" : "text-ink hover:text-primary",
+                            "group block rounded-2xl px-3 py-3 transition-colors duration-300 ease-out-soft focus-visible:shadow-focus",
+                            isActive ? "bg-tint-lilac" : "hover:bg-tint-mist",
                           )}
                         >
-                          {item.label}
+                          <span
+                            className={cn(
+                              "block text-[22px] leading-tight font-[650] tracking-[-0.03em] transition-colors duration-300",
+                              isActive ? "text-primary" : "text-ink group-hover:text-primary",
+                            )}
+                          >
+                            {item.label}
+                          </span>
+                          <span className="mt-0.5 block text-sm text-ink-muted">{subtitles[item.id]}</span>
                         </Link>
-                      </li>
+                      </motion.li>
                     );
                   })}
                 </ul>
               </nav>
 
-              <div className="mt-auto space-y-5 p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:p-6">
-                <ButtonLink href={whatsappLink()} external size="lg" className="w-full">
-                  Agendar pelo WhatsApp
+              <motion.div
+                className="mt-auto space-y-3 p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:p-6"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={reduce ? { duration: 0 } : { ...SPRING, delay: 0.08 + navItems.length * 0.05 }}
+              >
+                <ButtonLink href="#agendar" onClick={closeForNavigation} size="lg" className="w-full">
+                  Agendar sessão
                 </ButtonLink>
-                <p className="text-center text-xs text-ink-muted">Psicóloga clínica · {site.crp}</p>
-              </div>
+                <ButtonLink href={whatsappLink()} external variant="whatsapp" size="lg" className="w-full">
+                  <WhatsAppIcon />
+                  Conversar no WhatsApp
+                </ButtonLink>
+                <p className="pt-2 text-center text-xs text-ink-muted">Psicóloga clínica · {site.crp}</p>
+              </motion.div>
             </motion.div>
           </motion.div>
         )}

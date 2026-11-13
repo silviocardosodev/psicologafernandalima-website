@@ -4,6 +4,7 @@ import { FloatingActions } from "@/components/layout/FloatingActions";
 import { Hero } from "@/components/sections/Hero";
 import { Help } from "@/components/sections/Help";
 import { Journey } from "@/components/sections/Journey";
+import { OnlineTherapy } from "@/components/sections/OnlineTherapy";
 import { AboutMe } from "@/components/sections/AboutMe";
 import { FAQ } from "@/components/sections/FAQ";
 import { Booking } from "@/components/sections/Booking";
@@ -16,6 +17,7 @@ export default function Home() {
         <Hero />
         <Help />
         <Journey />
+        <OnlineTherapy />
         <AboutMe />
         <FAQ />
         <Booking />

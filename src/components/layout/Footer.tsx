@@ -5,7 +5,8 @@ import { Container } from "@/components/ui/Section";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { navItems, site, whatsappLink } from "@/lib/site";
 
-const linkClass = "rounded-sm text-sm text-ink-soft transition-colors duration-150 hover:text-ink";
+const linkClass =
+  "inline-block rounded-sm text-sm text-ink-soft transition-[color,transform] duration-300 ease-out-soft hover:-translate-y-px hover:text-primary";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -18,8 +19,8 @@ export function Footer() {
 
       <Container className="py-12 sm:py-14">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-          <Link href="#inicio" className="flex items-center gap-3 self-start rounded-md">
-            <BrandMark className="w-8" />
+          <Link href="#inicio" className="group flex items-center gap-3 self-start rounded-md">
+            <BrandMark className="w-8 transition-transform duration-500 ease-out-soft group-hover:-rotate-6" />
             <span className="flex flex-col leading-tight">
               <span className="text-[15px] font-medium text-ink">{site.name}</span>
               <span className="text-[13px] text-ink-muted">Psicóloga clínica · {site.crp}</span>
@@ -42,9 +43,9 @@ export function Footer() {
             href={whatsappLink()}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 self-start rounded-sm text-sm text-ink-soft transition-colors duration-150 hover:text-whatsapp lg:self-auto"
+            className="inline-flex items-center gap-2 self-start rounded-sm text-sm text-ink-soft transition-colors duration-300 ease-out-soft hover:text-primary lg:self-auto"
           >
-            <WhatsAppIcon className="size-4 text-whatsapp" />
+            <WhatsAppIcon className="size-4 text-primary" />
             {site.phoneDisplay}
             <span className="sr-only"> (WhatsApp, abre em nova aba)</span>
           </a>
@@ -53,11 +54,11 @@ export function Footer() {
         <div className="mt-10 flex flex-col gap-3 border-t border-line-soft pt-6 text-[13px] text-ink-muted sm:flex-row sm:items-center sm:justify-between">
           <p className="text-ink-soft">
             Em caso de emergência, ligue{" "}
-            <a href="tel:188" className="font-medium text-ink underline decoration-line-hover underline-offset-4 hover:decoration-ink">
+            <a href="tel:188" className="font-medium text-ink underline decoration-primary-200 underline-offset-4 transition-colors duration-300 hover:decoration-primary">
               CVV 188
             </a>{" "}
             ou{" "}
-            <a href="tel:192" className="font-medium text-ink underline decoration-line-hover underline-offset-4 hover:decoration-ink">
+            <a href="tel:192" className="font-medium text-ink underline decoration-primary-200 underline-offset-4 transition-colors duration-300 hover:decoration-primary">
               SAMU 192
             </a>
             .
