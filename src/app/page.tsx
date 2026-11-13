@@ -1,25 +1,31 @@
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
-import { About } from "@/components/sections/About";
-import { AboutMe } from "@/components/sections/AboutMe";
-import { Benefits } from "@/components/sections/Benefits";
-import { CTA } from "@/components/sections/CTA";
+import { FloatingActions } from "@/components/layout/FloatingActions";
 import { Hero } from "@/components/sections/Hero";
 import { Identification } from "@/components/sections/Identification";
+import { Areas } from "@/components/sections/Areas";
+import { Journey } from "@/components/sections/Journey";
+import { AboutMe } from "@/components/sections/AboutMe";
+import { OnlineTherapy } from "@/components/sections/OnlineTherapy";
+import { FAQ } from "@/components/sections/FAQ";
+import { Booking } from "@/components/sections/Booking";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-transparent">
+    <>
       <Header />
-      <main>
+      <main id="conteudo">
         <Hero />
         <Identification />
+        <Areas />
+        <Journey />
         <AboutMe />
-        <Benefits />
-        <About />
-        <CTA />
+        <OnlineTherapy />
+        <FAQ />
+        <Booking />
       </main>
       <Footer />
-    </div>
+      <FloatingActions />
+    </>
   );
 }

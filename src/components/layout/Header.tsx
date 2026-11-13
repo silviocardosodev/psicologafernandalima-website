@@ -1,158 +1,328 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+} from "framer-motion";
+import { ArrowUpRight, CalendarCheck, Menu, ShieldCheck, X } from "lucide-react";
 
-const navItems = [
-  { href: "#inicio", label: "Início" },
-  { href: "#para-quem-e", label: "Para quem é" },
-  { href: "#sobre", label: "Sobre" },
-  { href: "#agendar", label: "Agendar" },
-];
+import { ButtonLink } from "@/components/ui/Button";
+import { Container } from "@/components/ui/Section";
+import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
+import { cn } from "@/lib/utils";
+import { navItems, site, whatsappLink } from "@/lib/site";
 
-export function Header() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMobileHeaderVisible, setIsMobileHeaderVisible] = useState(true);
-  const lastScrollY = useRef(0);
+const DRAWER_ID = "menu-mobile";
+
+/** Tracks which nav section is currently crossing the middle band of the viewport. */
+function useActiveSection(ids: readonly string[]) {
+  const [active, setActive] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const isDesktop = window.innerWidth >= 1024;
+    const elements = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+    if (elements.length === 0) return;
 
-      if (isDesktop || isOpen) {
-        setIsMobileHeaderVisible(true);
-        lastScrollY.current = currentScrollY;
+    const visible = new Map<string, boolean>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) visible.set(entry.target.id, entry.isIntersecting);
+        const current = ids.find((id) => visible.get(id));
+        setActive(current ?? null);
+      },
+      // A thin band around 40% of the viewport height decides the active section.
+      { rootMargin: "-40% 0px -55% 0px", threshold: 0 },
+    );
+
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [ids]);
+
+  return active;
+}
+
+function Wordmark({ onClick }: { onClick?: () => void }) {
+  return (
+    <Link
+      href="#inicio"
+      onClick={onClick}
+      className="group flex items-center gap-3 rounded-md"
+      aria-label={`${site.name}, Psicóloga — voltar ao início`}
+    >
+      <span
+        aria-hidden
+        className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-hero text-[13px] font-bold tracking-[-0.02em] text-white shadow-primary transition-transform duration-200 group-hover:-rotate-3"
+      >
+        FL
+      </span>
+      <span className="flex flex-col leading-none">
+        <span className="text-[17px] font-bold tracking-[-0.03em] text-ink">{site.name}</span>
+        <span className="mt-1 text-[11.5px] font-medium tracking-[-0.005em] text-ink-muted">
+          Psicóloga · {site.crp}
+        </span>
+      </span>
+    </Link>
+  );
+}
+
+export function Header() {
+  const reduce = useReducedMotion();
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+  const ids = useRef(navItems.map((item) => item.id)).current;
+  const active = useActiveSection(ids);
+
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
+
+  const { scrollY, scrollYProgress } = useScroll();
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 140, damping: 28, restDelta: 0.001 });
+
+  useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 8));
+  useEffect(() => setScrolled(window.scrollY > 8), []);
+
+  // Restore focus to the menu button only for "dismiss" closes (Esc, close button, backdrop).
+  // When a nav link is followed, focus should move with the navigation instead.
+  const restoreFocusRef = useRef(true);
+  const close = useCallback(() => {
+    restoreFocusRef.current = true;
+    setOpen(false);
+  }, []);
+  const closeForNavigation = useCallback(() => {
+    restoreFocusRef.current = false;
+    setOpen(false);
+  }, []);
+
+  // Drawer: body scroll lock, Esc to close, focus trap, restore focus.
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const focusFirst = window.setTimeout(() => {
+      drawerRef.current?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+    }, 30);
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        restoreFocusRef.current = true;
+        setOpen(false);
         return;
       }
-
-      if (currentScrollY <= 24) {
-        setIsMobileHeaderVisible(true);
-      } else if (currentScrollY > lastScrollY.current) {
-        setIsMobileHeaderVisible(false);
-      } else {
-        setIsMobileHeaderVisible(true);
+      if (event.key !== "Tab" || !drawerRef.current) return;
+      const focusables = drawerRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
-
-      lastScrollY.current = currentScrollY;
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("resize", handleScroll);
-    handleScroll();
+    const onResize = () => {
+      if (window.innerWidth >= 1024) setOpen(false);
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", onResize);
+    const menuButton = menuButtonRef.current;
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
+      window.clearTimeout(focusFirst);
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("resize", onResize);
+      if (restoreFocusRef.current) menuButton?.focus({ preventScroll: true });
+      restoreFocusRef.current = true;
     };
-  }, [isOpen]);
-
-  const closeMenu = () => setIsOpen(false);
+  }, [open]);
 
   return (
     <>
       <header
-        className={`sticky top-0 z-40 border-b border-white/70 bg-white/82 backdrop-blur-xl transition-transform duration-300 lg:translate-y-0 ${
-          isMobileHeaderVisible ? "translate-y-0" : "-translate-y-full"
-        }`}
+        className={cn(
+          "sticky top-0 z-50 h-[var(--header-height)] border-b bg-white/80 backdrop-blur-xl backdrop-saturate-150 transition-[border-color,box-shadow,background-color] duration-200",
+          scrolled ? "border-line shadow-[0_1px_0_rgb(17_24_39/2%),0_8px_24px_rgb(17_24_39/4%)]" : "border-transparent",
+        )}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-6 lg:px-8">
-          <Link
-            href="#inicio"
-            className="font-[family:var(--font-heading)] text-3xl font-semibold tracking-[0.02em] text-text-main"
-          >
-            Fernanda Lima
-          </Link>
+        <Container className="flex h-full items-center justify-between gap-6">
+          <Wordmark />
 
-          <div className="hidden items-center gap-8 lg:flex">
-            <nav className="flex items-center gap-5 text-sm text-text-muted">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="transition-colors duration-200 hover:text-text-main"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-
-            <Link
-              href="#agendar"
-              className="inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,rgba(142,116,255,0.94),rgba(184,167,255,0.92))] px-5 py-3 text-sm font-medium text-white shadow-[0_10px_30px_rgba(142,116,255,0.16)] transition-transform duration-200 hover:-translate-y-0.5"
-            >
-              Agendar sessão
-            </Link>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIsOpen(true)}
-            aria-label="Abrir menu"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border-soft bg-white text-text-main shadow-[0_8px_24px_rgba(28,28,30,0.04)] transition-colors duration-200 hover:bg-background-soft lg:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-        </div>
-      </header>
-
-      <div
-        className={`fixed inset-0 z-50 transition-all duration-300 lg:hidden ${
-          isOpen ? "pointer-events-auto" : "pointer-events-none"
-        }`}
-      >
-        <button
-          type="button"
-          aria-label="Fechar menu"
-          onClick={closeMenu}
-          className={`absolute inset-0 bg-[rgba(28,28,30,0.28)] backdrop-blur-[2px] transition-opacity duration-300 ${
-            isOpen ? "opacity-100" : "opacity-0"
-          }`}
-        />
-
-        <aside
-          className={`absolute right-0 top-0 flex h-full w-[min(86vw,24rem)] flex-col border-l border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(250,251,255,0.96))] px-6 py-6 shadow-[-18px_0_50px_rgba(28,28,30,0.08)] transition-transform duration-300 ${
-            isOpen ? "translate-x-0" : "translate-x-full"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <p className="font-[family:var(--font-heading)] text-2xl font-semibold text-text-main">
-              Fernanda Lima
-            </p>
-
-            <button
-              type="button"
-              onClick={closeMenu}
-              aria-label="Fechar menu"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border-soft bg-white text-text-main"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          <nav className="mt-10 flex flex-col gap-4">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={closeMenu}
-                className="rounded-2xl border border-transparent px-4 py-3 text-base font-medium text-text-main transition-colors duration-200 hover:border-border-soft hover:bg-white"
-              >
-                {item.label}
-              </Link>
-            ))}
+          <nav aria-label="Navegação principal" className="hidden lg:block">
+            <ul className="flex items-center gap-1 rounded-full border border-line-soft bg-white/60 p-1">
+              {navItems.map((item) => {
+                const isActive = active === item.id;
+                return (
+                  <li key={item.id} className="relative">
+                    {isActive && (
+                      <motion.span
+                        layoutId="nav-active-pill"
+                        aria-hidden
+                        className="absolute inset-0 rounded-full bg-primary-100 ring-1 ring-primary-200"
+                        transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 36 }}
+                      />
+                    )}
+                    <Link
+                      href={`#${item.id}`}
+                      aria-current={isActive ? "location" : undefined}
+                      className={cn(
+                        "relative z-10 block rounded-full px-3.5 py-1.5 text-[13.5px] font-medium tracking-[-0.01em] transition-colors duration-150",
+                        isActive ? "text-primary-hover" : "text-ink-soft hover:text-ink",
+                      )}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           </nav>
 
-          <Link
-            href="#agendar"
-            onClick={closeMenu}
-            className="mt-8 inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,rgba(142,116,255,0.94),rgba(184,167,255,0.92))] px-5 py-3.5 text-sm font-medium text-white shadow-[0_12px_30px_rgba(142,116,255,0.16)]"
+          <div className="flex items-center gap-2">
+            <ButtonLink href="#agendar" size="md" className="hidden sm:inline-flex">
+              <CalendarCheck className="size-4" aria-hidden />
+              Agendar sessão
+            </ButtonLink>
+            <button
+              ref={menuButtonRef}
+              type="button"
+              onClick={() => setOpen(true)}
+              aria-expanded={open}
+              aria-controls={DRAWER_ID}
+              aria-haspopup="dialog"
+              className="grid size-10 place-items-center rounded-md border border-line bg-surface text-ink shadow-xs transition-colors duration-150 hover:bg-surface-hover focus-visible:shadow-focus lg:hidden"
+            >
+              <Menu className="size-5" aria-hidden />
+              <span className="sr-only">Abrir menu</span>
+            </button>
+          </div>
+        </Container>
+
+        {/* Reading progress */}
+        <motion.div
+          aria-hidden
+          className="absolute inset-x-0 -bottom-px h-[2px] origin-left bg-progress"
+          style={{ scaleX: reduce ? scrollYProgress : smoothProgress }}
+        />
+      </header>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="drawer"
+            className="fixed inset-0 z-[70] lg:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reduce ? 0 : 0.18 }}
           >
-            Agendar sessão
-          </Link>
-        </aside>
-      </div>
+            <div aria-hidden className="absolute inset-0 bg-ink/30 backdrop-blur-sm" onClick={close} />
+            <motion.div
+              ref={drawerRef}
+              id={DRAWER_ID}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menu de navegação"
+              className="absolute inset-y-0 right-0 flex w-full max-w-[420px] flex-col overflow-y-auto bg-surface shadow-raised sm:rounded-l-2xl"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={reduce ? { opacity: 0 } : { x: "100%" }}
+              transition={{ duration: reduce ? 0 : 0.26, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <div className="flex h-[var(--header-height)] shrink-0 items-center justify-between border-b border-line-soft px-5 sm:px-6">
+                <Wordmark onClick={closeForNavigation} />
+                <button
+                  type="button"
+                  onClick={close}
+                  className="grid size-10 place-items-center rounded-md border border-line bg-surface text-ink transition-colors duration-150 hover:bg-surface-hover focus-visible:shadow-focus"
+                >
+                  <X className="size-5" aria-hidden />
+                  <span className="sr-only">Fechar menu</span>
+                </button>
+              </div>
+
+              <nav aria-label="Navegação mobile" className="px-3 pt-4 sm:px-4">
+                <ul className="flex flex-col">
+                  {navItems.map((item, index) => {
+                    const isActive = active === item.id;
+                    return (
+                      <motion.li
+                        key={item.id}
+                        initial={{ opacity: 0, x: 16 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={reduce ? { duration: 0 } : { delay: 0.06 + index * 0.04, duration: 0.24 }}
+                      >
+                        <Link
+                          href={`#${item.id}`}
+                          onClick={closeForNavigation}
+                          data-autofocus={index === 0 ? "" : undefined}
+                          aria-current={isActive ? "location" : undefined}
+                          className={cn(
+                            "group flex items-center gap-4 rounded-lg px-3 py-3.5 transition-colors duration-150",
+                            isActive ? "bg-primary-100" : "hover:bg-surface-hover",
+                          )}
+                        >
+                          <span
+                            aria-hidden
+                            className={cn(
+                              "w-6 text-xs font-semibold tabular-nums tracking-[0.02em]",
+                              isActive ? "text-primary" : "text-ink-muted",
+                            )}
+                          >
+                            {String(index + 1).padStart(2, "0")}
+                          </span>
+                          <span
+                            className={cn(
+                              "flex-1 text-[22px] font-semibold tracking-[-0.03em]",
+                              isActive ? "text-primary-hover" : "text-ink",
+                            )}
+                          >
+                            {item.label}
+                          </span>
+                          <ArrowUpRight
+                            aria-hidden
+                            className="size-4 text-ink-muted transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                          />
+                        </Link>
+                      </motion.li>
+                    );
+                  })}
+                </ul>
+              </nav>
+
+              <div className="mt-auto space-y-3 border-t border-line-soft p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-6">
+                <ButtonLink href="#agendar" onClick={closeForNavigation} size="lg" className="w-full">
+                  <CalendarCheck className="size-4" aria-hidden />
+                  Agendar sessão
+                </ButtonLink>
+                <ButtonLink href={whatsappLink()} external variant="whatsapp" size="lg" className="w-full">
+                  <WhatsAppIcon className="size-5" />
+                  Conversar no WhatsApp
+                </ButtonLink>
+                <p className="flex items-center justify-center gap-2 pt-2 text-xs text-ink-muted">
+                  <ShieldCheck className="size-3.5 text-primary" aria-hidden />
+                  Psicóloga clínica · {site.crp} · Atendimento online
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
