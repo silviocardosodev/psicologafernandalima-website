@@ -12,6 +12,7 @@ import {
 } from "framer-motion";
 import { ArrowUpRight, CalendarCheck, Menu, ShieldCheck, X } from "lucide-react";
 
+import { BrandMark } from "@/components/ui/BrandMark";
 import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Section";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
@@ -56,12 +57,7 @@ function Wordmark({ onClick }: { onClick?: React.MouseEventHandler<HTMLAnchorEle
       className="group flex items-center gap-3 rounded-md"
       aria-label={`${site.name}, Psicóloga — voltar ao início`}
     >
-      <span
-        aria-hidden
-        className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-hero text-[13px] font-bold tracking-[-0.02em] text-white shadow-primary transition-transform duration-200 group-hover:-rotate-3"
-      >
-        FL
-      </span>
+      <BrandMark className="w-8 transition-transform duration-300 ease-out group-hover:-rotate-12" />
       <span className="flex flex-col leading-none">
         <span className="text-[17px] font-bold tracking-[-0.03em] text-ink">{site.name}</span>
         <span className="mt-1 text-[11.5px] font-medium tracking-[-0.005em] text-ink-muted">

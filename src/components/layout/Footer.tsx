@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BadgeCheck, LifeBuoy, Phone, Video } from "lucide-react";
 
+import { BrandMark } from "@/components/ui/BrandMark";
 import { Container } from "@/components/ui/Section";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { navItems, site, whatsappLink } from "@/lib/site";
@@ -59,12 +60,7 @@ export function Footer() {
           {/* Brand */}
           <div className="max-w-sm">
             <Link href="#inicio" className="inline-flex items-center gap-3 rounded-md focus-visible:outline-white">
-              <span
-                aria-hidden
-                className="grid size-10 place-items-center rounded-[10px] bg-white text-sm font-bold tracking-[-0.02em] text-primary-deep"
-              >
-                FL
-              </span>
+              <BrandMark tone="light" className="w-9" />
               <span className="flex flex-col leading-none">
                 <span className="text-lg font-bold tracking-[-0.03em]">{site.name}</span>
                 <span className="mt-1 text-xs text-white/90">Psicóloga clínica · {site.crp}</span>
