@@ -1,12 +1,13 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
 
 import { Container, Section, SectionHeader } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
+import { track } from "@/lib/analytics";
 import { ctaLabel, whatsappLink } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -54,6 +55,19 @@ export function Identify() {
 
   const hasSelection = selected.length > 0;
 
+  // Analytics (LGPD): only the count is sent, never which statements. Debounced so rapid
+  // toggles send one event; starts at 0 so nothing fires on mount.
+  const lastSentCount = useRef(0);
+  useEffect(() => {
+    const count = selected.length;
+    if (count === lastSentCount.current) return;
+    const timer = window.setTimeout(() => {
+      lastSentCount.current = count;
+      track("identify_select", { count });
+    }, 600);
+    return () => window.clearTimeout(timer);
+  }, [selected.length]);
+
   const message = useMemo(() => {
     if (!includeSigns || !hasSelection) return BASE_MESSAGE;
     const picked = cards.filter((c) => selected.includes(c.id)).map((c) => `“${c.statement}”`);
@@ -84,7 +98,7 @@ export function Identify() {
                 const on = selected.includes(card.id);
                 return (
                   <li key={card.id} className="flex">
-                    <motion.button
+                    <m.button
                       type="button"
                       aria-pressed={on}
                       onClick={() => toggle(card.id)}
@@ -112,7 +126,7 @@ export function Identify() {
                       >
                         <AnimatePresence initial={false}>
                           {on && (
-                            <motion.span
+                            <m.span
                               key="check"
                               initial={{ scale: 0, rotate: -30 }}
                               animate={{ scale: 1, rotate: 0 }}
@@ -121,11 +135,11 @@ export function Identify() {
                               className="grid place-items-center"
                             >
                               <Check className="size-4" strokeWidth={3} />
-                            </motion.span>
+                            </m.span>
                           )}
                         </AnimatePresence>
                       </span>
-                    </motion.button>
+                    </m.button>
                   </li>
                 );
               })}
@@ -139,7 +153,7 @@ export function Identify() {
 
           <AnimatePresence initial={false}>
             {hasSelection && (
-              <motion.div
+              <m.div
                 key="result"
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
@@ -162,7 +176,10 @@ export function Identify() {
                           id={`${uid}-incluir`}
                           type="checkbox"
                           checked={includeSigns}
-                          onChange={(e) => setIncludeSigns(e.target.checked)}
+                          onChange={(e) => {
+                            setIncludeSigns(e.target.checked);
+                            track("identify_optin", { enabled: e.target.checked });
+                          }}
                           className="size-5 shrink-0 cursor-pointer rounded accent-primary"
                         />
                         Incluir o que marquei na mensagem
@@ -190,7 +207,7 @@ export function Identify() {
                     </a>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
 

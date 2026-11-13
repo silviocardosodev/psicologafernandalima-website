@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useId, useMemo, useRef, useState } from "react";
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, LayoutGroup, m, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, ChevronDown, Pencil, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { Container, Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
+import { track } from "@/lib/analytics";
 import { ctaLabel, whatsappLink } from "@/lib/site";
 import { useRadioKeys } from "@/lib/useRadioKeys";
 import { cn } from "@/lib/utils";
@@ -119,6 +120,8 @@ export function Booking() {
     }
     setDir(1);
     shouldFocus.current = true;
+    // Analytics: 1-based step reached (2, 3), 4 = preview. No answers are sent.
+    track("booking_step", { step: step < steps.length - 1 ? step + 2 : steps.length + 1 });
     if (step < steps.length - 1) setStep(step + 1);
     else setDone(true);
   }
@@ -189,13 +192,16 @@ export function Booking() {
                 type="button"
                 aria-expanded={open}
                 aria-controls={panelId}
-                onClick={() => setOpen((o) => !o)}
+                onClick={() => {
+                  if (!open) track("booking_open");
+                  setOpen(!open);
+                }}
                 className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 text-[15px] font-medium text-primary underline-offset-4 transition-colors hover:bg-white/70 hover:text-primary-hover hover:underline focus-visible:shadow-focus"
               >
                 Prefere que eu escreva a mensagem por você?
-                <motion.span aria-hidden animate={{ rotate: open ? 180 : 0 }} transition={t} className="grid place-items-center">
+                <m.span aria-hidden animate={{ rotate: open ? 180 : 0 }} transition={t} className="grid place-items-center">
                   <ChevronDown className="size-4" />
-                </motion.span>
+                </m.span>
               </button>
             </div>
           </Reveal>
@@ -203,7 +209,7 @@ export function Booking() {
           <div id={panelId}>
             <AnimatePresence initial={false}>
               {open && (
-                <motion.div
+                <m.div
                   key="assistente"
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
@@ -239,7 +245,7 @@ export function Booking() {
                                     )}
                                   >
                                     {current && (
-                                      <motion.span
+                                      <m.span
                                         layoutId="booking-dot"
                                         aria-hidden
                                         className="absolute inset-0 rounded-full bg-primary"
@@ -264,7 +270,7 @@ export function Booking() {
                         aria-valuemax={100}
                         aria-valuenow={Math.round(progress)}
                       >
-                        <motion.div
+                        <m.div
                           className="h-full rounded-full bg-progress"
                           initial={false}
                           animate={{ width: `${progress}%` }}
@@ -283,7 +289,7 @@ export function Booking() {
                     >
                       <div className="relative min-h-[272px]">
                         <AnimatePresence mode="wait" initial={false} custom={dir}>
-                          <motion.div
+                          <m.div
                             key={done ? "done" : step}
                             custom={dir}
                             variants={slide}
@@ -328,7 +334,7 @@ export function Booking() {
                                   {reasons.map((r, i) => {
                                     const on = selected.includes(r);
                                     return (
-                                      <motion.button
+                                      <m.button
                                         key={r}
                                         ref={(el) => {
                                           reasonRefs.current[i] = el;
@@ -348,7 +354,7 @@ export function Booking() {
                                       >
                                         {on && <Check aria-hidden className="size-3.5" strokeWidth={2.75} />}
                                         {r}
-                                      </motion.button>
+                                      </m.button>
                                     );
                                   })}
                                 </div>
@@ -377,7 +383,7 @@ export function Booking() {
                                     {periods.map((p, i) => {
                                       const on = period === p;
                                       return (
-                                        <motion.button
+                                        <m.button
                                           key={p}
                                           ref={(el) => {
                                             periodKeys.refs.current[i] = el;
@@ -401,7 +407,7 @@ export function Booking() {
                                           )}
                                         >
                                           {on && (
-                                            <motion.span
+                                            <m.span
                                               layoutId="booking-period"
                                               aria-hidden
                                               className="absolute inset-0 rounded-[15px] bg-tint-violet"
@@ -418,7 +424,7 @@ export function Booking() {
                                           >
                                             {on && <span className="size-1.5 rounded-full bg-white" />}
                                           </span>
-                                        </motion.button>
+                                        </m.button>
                                       );
                                     })}
                                   </div>
@@ -460,7 +466,7 @@ export function Booking() {
                                           )}
                                         >
                                           {on && (
-                                            <motion.span
+                                            <m.span
                                               layoutId="booking-first"
                                               aria-hidden
                                               className="absolute inset-0 rounded-full bg-primary"
@@ -485,14 +491,14 @@ export function Booking() {
                                 <p className="mt-1.5 text-sm text-ink-soft">Você ainda pode editar no WhatsApp.</p>
                                 <figure className="mt-5 rounded-3xl bg-tint-mist p-4">
                                   <figcaption className="sr-only">Prévia da mensagem</figcaption>
-                                  <motion.div
+                                  <m.div
                                     initial={{ y: 10, scale: 0.97 }}
                                     animate={{ y: 0, scale: 1 }}
                                     transition={reduce ? { duration: 0 } : { ...spring, delay: 0.1 }}
                                     className="ml-auto max-w-[92%] origin-bottom-right rounded-2xl rounded-br-md border border-primary-200 bg-white px-4 py-3 text-[14px] leading-relaxed whitespace-pre-line text-ink"
                                   >
                                     {message}
-                                  </motion.div>
+                                  </m.div>
                                 </figure>
                                 <button
                                   type="button"
@@ -504,16 +510,17 @@ export function Booking() {
                                 </button>
                               </div>
                             )}
-                          </motion.div>
+                          </m.div>
                         </AnimatePresence>
                       </div>
 
                       {done ? (
                         <div className="mt-3 space-y-3">
-                          <motion.a
+                          <m.a
                             href={whatsappLink(message)}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={() => track("booking_submit")}
                             whileHover={{ y: -2 }}
                             whileTap={{ scale: 0.98 }}
                             transition={t}
@@ -522,7 +529,7 @@ export function Booking() {
                             <WhatsAppIcon className="size-5" />
                             Enviar pelo WhatsApp
                             <span className="sr-only"> (abre em nova aba)</span>
-                          </motion.a>
+                          </m.a>
                           <Button variant="ghost" onClick={back} className="px-3">
                             <ArrowLeft aria-hidden className="size-4" />
                             Voltar
@@ -547,7 +554,7 @@ export function Booking() {
                       Nada do que você escreve aqui é salvo.
                     </p>
                   </div>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { m, useReducedMotion } from "framer-motion";
 import { Clock, Lock, MapPin, Video, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -61,7 +61,7 @@ export function HowItWorks() {
 
           <Reveal delay={0.05} className="relative mt-12 lg:mt-14">
             {/* Decorative connecting line — draws in once, never loops. */}
-            <motion.span
+            <m.span
               aria-hidden
               initial={{ scaleX: 0 }}
               whileInView={{ scaleX: 1 }}
@@ -69,7 +69,7 @@ export function HowItWorks() {
               transition={draw}
               className="pointer-events-none absolute top-[22px] right-[12.5%] left-[12.5%] hidden h-px origin-left bg-lavender/60 lg:block"
             />
-            <motion.span
+            <m.span
               aria-hidden
               initial={{ scaleY: 0 }}
               whileInView={{ scaleY: 1 }}

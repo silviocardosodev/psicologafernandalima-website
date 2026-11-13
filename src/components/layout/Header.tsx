@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AnimatePresence,
-  motion,
+  m,
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
@@ -93,8 +93,17 @@ export function Header() {
   const { scrollY, scrollYProgress } = useScroll();
   const smoothProgress = useSpring(scrollYProgress, { stiffness: 140, damping: 28, restDelta: 0.001 });
 
-  useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 8));
-  useEffect(() => setScrolled(window.scrollY > 8), []);
+  // Only touch state when the boolean flips, not on every scroll frame.
+  const scrolledRef = useRef(false);
+  const syncScrolled = useCallback((y: number) => {
+    const next = y > 8;
+    if (next !== scrolledRef.current) {
+      scrolledRef.current = next;
+      setScrolled(next);
+    }
+  }, []);
+  useMotionValueEvent(scrollY, "change", syncScrolled);
+  useEffect(() => syncScrolled(window.scrollY), [syncScrolled]);
 
   // Restore focus to the menu button only for "dismiss" closes (Esc, close button, backdrop).
   // When a nav link is followed, focus should move with the navigation instead.
@@ -202,7 +211,7 @@ export function Header() {
                 return (
                   <li key={item.id} className="relative">
                     {isActive && (
-                      <motion.span
+                      <m.span
                         layoutId="nav-active-pill"
                         aria-hidden
                         className="absolute inset-0 rounded-full bg-tint-lilac"
@@ -228,7 +237,7 @@ export function Header() {
           <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Same label and destination everywhere: always opens WhatsApp. Compact pill below lg
                 (hidden under 390px, where it doesn't fit; the drawer keeps it). */}
-            <motion.div
+            <m.div
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.97 }}
               transition={press}
@@ -242,7 +251,7 @@ export function Header() {
               >
                 {ctaLabel}
               </ButtonLink>
-            </motion.div>
+            </m.div>
             <button
               ref={menuButtonRef}
               type="button"
@@ -259,7 +268,7 @@ export function Header() {
         </Container>
 
         {/* Reading progress */}
-        <motion.div
+        <m.div
           aria-hidden
           className="absolute inset-x-0 -bottom-px h-[2px] origin-left bg-progress"
           style={{ scaleX: reduce ? scrollYProgress : smoothProgress }}
@@ -268,7 +277,7 @@ export function Header() {
 
       <AnimatePresence>
         {open && (
-          <motion.div
+          <m.div
             key="drawer"
             className="fixed inset-0 z-[70] lg:hidden"
             initial={{ opacity: 0 }}
@@ -277,7 +286,7 @@ export function Header() {
             transition={{ duration: reduce ? 0 : 0.25 }}
           >
             <div aria-hidden className="absolute inset-0 bg-primary-deep/15 backdrop-blur-sm" onClick={close} />
-            <motion.div
+            <m.div
               ref={drawerRef}
               id={DRAWER_ID}
               role="dialog"
@@ -306,7 +315,7 @@ export function Header() {
                   {navItems.map((item, index) => {
                     const isActive = active === item.id;
                     return (
-                      <motion.li
+                      <m.li
                         key={item.id}
                         initial={{ opacity: 0, x: 24 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -332,13 +341,13 @@ export function Header() {
                           </span>
                           <span className="mt-0.5 block text-sm text-ink-muted">{subtitles[item.id]}</span>
                         </Link>
-                      </motion.li>
+                      </m.li>
                     );
                   })}
                 </ul>
               </nav>
 
-              <motion.div
+              <m.div
                 className="mt-auto space-y-3 p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:p-6"
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -349,9 +358,9 @@ export function Header() {
                   {ctaLabel}
                 </ButtonLink>
                 <p className="pt-2 text-center text-xs text-ink-muted">Psicóloga clínica · {site.crp}</p>
-              </motion.div>
-            </motion.div>
-          </motion.div>
+              </m.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>

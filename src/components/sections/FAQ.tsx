@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "framer-motion";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { AnimatePresence, LayoutGroup, m, useReducedMotion } from "framer-motion";
 import { Plus, Search, X } from "lucide-react";
 
 import { Container, Section, SectionHeader } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
+import { track } from "@/lib/analytics";
 import { faqItems, type FaqCategory } from "@/lib/faq";
 import { useRadioKeys } from "@/lib/useRadioKeys";
 import { cn } from "@/lib/utils";
@@ -58,7 +59,12 @@ export function FAQ() {
   const [open, setOpen] = useState<string | null>(null);
   const reduce = useReducedMotion();
   const uid = useId();
-  const keys = useRadioKeys(categoryIds, category, setCategory);
+  // Analytics (LGPD): only the category id, never search text.
+  function chooseCategory(next: Filter) {
+    if (next !== category) track("faq_filter", { category: next });
+    setCategory(next);
+  }
+  const keys = useRadioKeys(categoryIds, category, chooseCategory);
 
   const results = useMemo(() => {
     const q = normalize(query.trim());
@@ -68,6 +74,18 @@ export function FAQ() {
         (!q || normalize(f.question).includes(q) || normalize(f.answer).includes(q)),
     );
   }, [query, category]);
+
+  // Analytics: whether a search found anything — never the query itself. Debounced after
+  // typing stops, only for 3+ characters (so nothing fires on mount with an empty query).
+  const hasResultsRef = useRef(results.length > 0);
+  useEffect(() => {
+    hasResultsRef.current = results.length > 0;
+  }, [results.length]);
+  useEffect(() => {
+    if (query.trim().length < 3) return;
+    const timer = window.setTimeout(() => track("faq_search", { has_results: hasResultsRef.current }), 800);
+    return () => window.clearTimeout(timer);
+  }, [query]);
 
   const status =
     results.length === 0
@@ -125,7 +143,7 @@ export function FAQ() {
             />
             <AnimatePresence>
               {query && (
-                <motion.button
+                <m.button
                   type="button"
                   onClick={() => setQuery("")}
                   aria-label="Limpar busca"
@@ -136,7 +154,7 @@ export function FAQ() {
                   className="absolute top-1/2 right-3 -mt-4 grid size-8 place-items-center rounded-full text-ink-muted transition-colors hover:bg-tint-violet hover:text-ink focus-visible:shadow-focus"
                 >
                   <X aria-hidden className="size-4" />
-                </motion.button>
+                </m.button>
               )}
             </AnimatePresence>
           </div>
@@ -157,14 +175,14 @@ export function FAQ() {
                       aria-checked={active}
                       tabIndex={keys.tabIndexFor(i)}
                       onKeyDown={(e) => keys.onKeyDown(e, i)}
-                      onClick={() => setCategory(c.id)}
+                      onClick={() => chooseCategory(c.id)}
                       className={cn(
                         "relative h-9 rounded-full px-4 text-sm transition-colors duration-150 focus-visible:shadow-focus",
                         active ? "text-white" : "text-ink-soft hover:bg-tint-lilac hover:text-ink",
                       )}
                     >
                       {active && (
-                        <motion.span
+                        <m.span
                           layoutId="faq-cat-pill"
                           aria-hidden
                           className="absolute inset-0 rounded-full bg-primary"
@@ -189,7 +207,7 @@ export function FAQ() {
                 const btnId = `${uid}-q-${item.id}`;
                 const panelId = `${uid}-a-${item.id}`;
                 return (
-                  <motion.li
+                  <m.li
                     key={item.id}
                     layout="position"
                     initial={{ opacity: 0, height: 0 }}
@@ -204,13 +222,16 @@ export function FAQ() {
                         type="button"
                         aria-expanded={isOpen}
                         aria-controls={panelId}
-                        onClick={() => setOpen(isOpen ? null : item.id)}
+                        onClick={() => {
+                          if (!isOpen) track("faq_open", { id: item.id });
+                          setOpen(isOpen ? null : item.id);
+                        }}
                         className="group flex w-full items-center justify-between gap-6 rounded-lg py-6 text-left text-[17px] font-semibold tracking-[-0.015em] text-ink transition-colors hover:text-primary focus-visible:shadow-focus sm:text-lg"
                       >
                         <span>
                           <Highlight text={item.question} query={query} />
                         </span>
-                        <motion.span
+                        <m.span
                           aria-hidden
                           animate={{ rotate: isOpen ? 45 : 0 }}
                           transition={reduce ? { duration: 0 } : spring}
@@ -220,13 +241,13 @@ export function FAQ() {
                           )}
                         >
                           <Plus className="size-4" />
-                        </motion.span>
+                        </m.span>
                       </button>
                     </h3>
                     <div id={panelId} role="region" aria-labelledby={btnId}>
                       <AnimatePresence initial={false}>
                         {isOpen && (
-                          <motion.div
+                          <m.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
@@ -236,11 +257,11 @@ export function FAQ() {
                             <p className="pr-12 pb-6 text-base leading-relaxed text-ink-soft">
                               <Highlight text={item.answer} query={query} />
                             </p>
-                          </motion.div>
+                          </m.div>
                         )}
                       </AnimatePresence>
                     </div>
-                  </motion.li>
+                  </m.li>
                 );
               })}
             </AnimatePresence>
@@ -248,7 +269,7 @@ export function FAQ() {
 
           <AnimatePresence initial={false}>
             {results.length === 0 && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
@@ -264,7 +285,7 @@ export function FAQ() {
                 >
                   Ver todas
                 </button>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </Reveal>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from "framer-motion";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, m, useMotionValueEvent, useReducedMotion, useScroll } from "framer-motion";
 import { ArrowUp } from "lucide-react";
 
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
@@ -18,8 +18,17 @@ export function FloatingActions() {
   const { scrollY } = useScroll();
   const [farDown, setFarDown] = useState(false);
 
-  useMotionValueEvent(scrollY, "change", (value) => setFarDown(value > TOP_AFTER));
-  useEffect(() => setFarDown(window.scrollY > TOP_AFTER), []);
+  // Only touch state when the boolean flips, not on every scroll frame.
+  const farDownRef = useRef(false);
+  const syncFarDown = useCallback((value: number) => {
+    const next = value > TOP_AFTER;
+    if (next !== farDownRef.current) {
+      farDownRef.current = next;
+      setFarDown(next);
+    }
+  }, []);
+  useMotionValueEvent(scrollY, "change", syncFarDown);
+  useEffect(() => syncFarDown(window.scrollY), [syncFarDown]);
 
   const spring = reduce ? { duration: 0 } : SPRING;
 
@@ -40,7 +49,7 @@ export function FloatingActions() {
 
       <AnimatePresence>
         {farDown && (
-          <motion.button
+          <m.button
             key="top"
             type="button"
             onClick={scrollToTop}
@@ -54,11 +63,11 @@ export function FloatingActions() {
           >
             <ArrowUp className="size-[18px]" aria-hidden />
             <span className="sr-only">Voltar ao topo</span>
-          </motion.button>
+          </m.button>
         )}
       </AnimatePresence>
 
-      <motion.a
+      <m.a
         href={whatsappLink()}
         target="_blank"
         rel="noopener noreferrer"
@@ -82,7 +91,7 @@ export function FloatingActions() {
           />
           <WhatsAppIcon className="relative size-7" />
         </span>
-      </motion.a>
+      </m.a>
     </div>
   );
 }

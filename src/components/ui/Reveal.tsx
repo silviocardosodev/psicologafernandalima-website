@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion, type HTMLMotionProps } from "framer-motion";
+import { m, useReducedMotion, type HTMLMotionProps } from "framer-motion";
 
 type RevealProps = HTMLMotionProps<"div"> & {
   delay?: number;
@@ -18,7 +18,7 @@ export function Reveal({ delay = 0, y = 18, children, ...props }: RevealProps) {
   const reduce = useReducedMotion();
 
   return (
-    <motion.div
+    <m.div
       initial={{ y }}
       whileInView={{ y: 0 }}
       viewport={{ once: true, amount: 0.15 }}
@@ -26,6 +26,6 @@ export function Reveal({ delay = 0, y = 18, children, ...props }: RevealProps) {
       {...props}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

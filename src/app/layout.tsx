@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 
 import "@/app/globals.css";
+import { AnalyticsProvider } from "@/components/providers/AnalyticsProvider";
 import { MotionProvider } from "@/components/providers/MotionProvider";
 import { site } from "@/lib/site";
 
@@ -83,6 +84,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           Pular para o conteúdo
         </a>
         <MotionProvider>{children}</MotionProvider>
+        <AnalyticsProvider />
         <script
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger

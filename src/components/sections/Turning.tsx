@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { m, useReducedMotion } from "framer-motion";
 import { ArrowDown } from "lucide-react";
 
 import { Container } from "@/components/ui/Section";
@@ -30,7 +30,7 @@ export function Turning() {
           fill="none"
           className="mb-8 h-6 w-40 text-lavender sm:mb-10"
         >
-          <motion.path
+          <m.path
             d="M2 12c6-9 10-9 14 0s8 9 12 0 7-8 11 0 9 7 15 0 12-6 20 0 16 5 26 0 18-4 28 0 16 3 30 0"
             stroke="currentColor"
             strokeWidth="1.75"
