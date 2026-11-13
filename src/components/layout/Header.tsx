@@ -48,7 +48,7 @@ function useActiveSection(ids: readonly string[]) {
   return active;
 }
 
-function Wordmark({ onClick }: { onClick?: () => void }) {
+function Wordmark({ onClick }: { onClick?: React.MouseEventHandler<HTMLAnchorElement> }) {
   return (
     <Link
       href="#inicio"
@@ -95,9 +95,21 @@ export function Header() {
     restoreFocusRef.current = true;
     setOpen(false);
   }, []);
-  const closeForNavigation = useCallback(() => {
+  const closeForNavigation = useCallback((event?: { currentTarget: EventTarget }) => {
     restoreFocusRef.current = false;
     setOpen(false);
+
+    // Move focus to the hash target so keyboard / screen-reader users continue from the
+    // section they navigated to instead of being dropped on <body> when the drawer unmounts.
+    const href = (event?.currentTarget as HTMLElement | undefined)?.getAttribute?.("href") ?? "";
+    const id = href.startsWith("#") ? href.slice(1) : "";
+    if (!id) return;
+    window.setTimeout(() => {
+      const target = document.getElementById(id);
+      if (!target) return;
+      if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+      target.focus({ preventScroll: true });
+    }, 60);
   }, []);
 
   // Drawer: body scroll lock, Esc to close, focus trap, restore focus.

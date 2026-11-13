@@ -110,6 +110,11 @@ body {
   background: rgb(79 70 229 / 16%);
 }
 
+/* Sections focused programmatically (skip link / drawer navigation) shouldn't get a ring. */
+[tabindex="-1"]:focus {
+  outline: none;
+}
+
 :focus-visible {
   outline: 2px solid var(--color-primary-600);
   outline-offset: 2px;
