@@ -7,15 +7,15 @@ type Variant = "primary" | "secondary" | "outline" | "ghost" | "whatsapp" | "lig
 type Size = "md" | "lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-md font-semibold whitespace-nowrap transition-[background-color,border-color,color,transform,box-shadow] duration-150 ease-out active:translate-y-px disabled:pointer-events-none disabled:opacity-55 focus-visible:shadow-focus";
+  "inline-flex items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap transition-[background-color,border-color,color,transform,box-shadow] duration-150 ease-out active:translate-y-px disabled:pointer-events-none disabled:opacity-55 focus-visible:shadow-focus";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-primary text-white border border-primary shadow-primary hover:bg-primary-hover hover:border-primary-hover hover:-translate-y-px",
+    "bg-primary text-white border border-primary shadow-[0_10px_30px_rgb(79_70_229/22%)] hover:bg-primary-hover hover:border-primary-hover hover:-translate-y-px",
   secondary:
     "bg-primary-100 text-primary-hover border border-primary-100 hover:bg-primary-200 hover:border-primary-200",
   outline:
-    "bg-surface text-ink border border-line-hover shadow-xs hover:bg-surface-hover hover:border-line-control",
+    "bg-white/70 text-ink border border-line hover:bg-white hover:border-line-hover",
   ghost: "text-ink-soft hover:text-ink hover:bg-surface-hover",
   whatsapp:
     "bg-whatsapp text-white border border-whatsapp shadow-[0_8px_24px_rgb(15_122_59/24%)] hover:bg-whatsapp-hover hover:border-whatsapp-hover hover:-translate-y-px",
@@ -24,8 +24,8 @@ const variants: Record<Variant, string> = {
 };
 
 const sizes: Record<Size, string> = {
-  md: "h-10 px-4 text-sm",
-  lg: "h-12 px-6 text-[15px]",
+  md: "h-11 px-5 text-sm",
+  lg: "h-13 px-8 text-[15px]",
 };
 
 type CommonProps = {

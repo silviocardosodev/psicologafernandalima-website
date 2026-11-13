@@ -21,23 +21,22 @@ export function Section({
   "aria-labelledby"?: string;
 }) {
   return (
-    <section id={id} aria-labelledby={labelledBy} className={cn("relative py-20 sm:py-24 lg:py-30", className)}>
+    <section id={id} aria-labelledby={labelledBy} className={cn("relative py-20 sm:py-28 lg:py-32", className)}>
       {children}
     </section>
   );
 }
 
-/** Uppercase meta label — PsicoFlow eyebrow style (12px / 600 / 0.05em). */
+/** Small letter-spaced label above headings — quiet, no pill. */
 export function Eyebrow({ children, className, tone = "primary" }: { children: ReactNode; className?: string; tone?: "primary" | "light" }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold tracking-[0.05em] uppercase",
-        tone === "primary" ? "bg-primary-100 text-primary-hover" : "bg-white/12 text-white ring-1 ring-white/20",
+        "inline-block text-xs font-semibold tracking-[0.14em] uppercase",
+        tone === "primary" ? "text-primary" : "text-white/90",
         className,
       )}
     >
-      <span aria-hidden className={cn("size-1.5 rounded-full", tone === "primary" ? "bg-primary" : "bg-white")} />
       {children}
     </span>
   );
@@ -64,12 +63,12 @@ export function SectionHeader({
       {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
       <h2
         id={id}
-        className="mt-4 text-[32px] leading-[1.12] font-bold tracking-[-0.03em] text-balance text-ink sm:text-[40px] lg:text-[44px]"
+        className="mt-3 text-[32px] leading-[1.15] font-normal tracking-[-0.025em] text-balance text-ink sm:text-[40px] lg:text-[46px]"
       >
         {title}
       </h2>
       {description && (
-        <p className="mt-4 text-base leading-relaxed text-ink-soft sm:text-lg">{description}</p>
+        <p className="mt-4 text-base leading-relaxed text-ink-soft sm:text-[17px]">{description}</p>
       )}
     </Reveal>
   );

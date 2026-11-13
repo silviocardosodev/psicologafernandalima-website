@@ -17,8 +17,7 @@ export function whatsappLink(message: string = site.defaultMessage) {
 }
 
 export const navItems = [
-  { id: "para-voce", label: "Para você" },
-  { id: "atuacao", label: "Atuação" },
+  { id: "ajuda", label: "Como ajudo" },
   { id: "jornada", label: "Como funciona" },
   { id: "sobre", label: "Sobre mim" },
   { id: "duvidas", label: "Dúvidas" },

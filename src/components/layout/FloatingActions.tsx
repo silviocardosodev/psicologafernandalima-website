@@ -67,7 +67,7 @@ export function FloatingActions() {
             type="button"
             onClick={scrollToTop}
             {...pop}
-            className="pointer-events-auto grid size-11 place-items-center rounded-full border border-line bg-white/90 text-ink-soft shadow-raised backdrop-blur-md transition-colors duration-150 hover:bg-white hover:text-primary focus-visible:shadow-focus"
+            className="pointer-events-auto grid size-11 place-items-center rounded-full border border-line bg-white text-ink-soft transition-colors duration-150 hover:border-line-hover hover:text-ink focus-visible:shadow-focus"
           >
             <ArrowUp className="size-[18px]" aria-hidden />
             <span className="sr-only">Voltar ao topo</span>
@@ -84,21 +84,9 @@ export function FloatingActions() {
             rel="noopener noreferrer"
             aria-label="Fale comigo pelo WhatsApp (abre em nova aba)"
             {...pop}
-            className="group pointer-events-auto relative flex h-14 items-center rounded-full bg-whatsapp text-white shadow-[0_10px_30px_rgb(15_122_59/35%)] transition-colors duration-150 hover:bg-whatsapp-hover focus-visible:shadow-focus focus-visible:outline-offset-4"
+            className="pointer-events-auto grid size-14 place-items-center rounded-full bg-whatsapp text-white shadow-[0_6px_20px_rgb(15_122_59/18%)] transition-colors duration-150 hover:bg-whatsapp-hover focus-visible:shadow-focus focus-visible:outline-offset-4"
           >
-            <span
-              aria-hidden
-              className="absolute inset-0 -z-10 animate-ping rounded-full bg-whatsapp opacity-25 [animation-duration:2.4s] [animation-iteration-count:3] motion-reduce:hidden"
-            />
-            <span
-              aria-hidden
-              className="grid max-w-0 overflow-hidden text-[14.5px] font-semibold tracking-[-0.01em] whitespace-nowrap opacity-0 transition-[max-width,opacity,padding] duration-200 ease-out md:group-hover:max-w-[140px] md:group-hover:pl-5 md:group-hover:opacity-100 md:group-focus-visible:max-w-[140px] md:group-focus-visible:pl-5 md:group-focus-visible:opacity-100"
-            >
-              Fale comigo
-            </span>
-            <span className="grid size-14 shrink-0 place-items-center">
-              <WhatsAppIcon className="size-7" />
-            </span>
+            <WhatsAppIcon className="size-7" />
           </motion.a>
         )}
       </AnimatePresence>

@@ -2,20 +2,12 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  AnimatePresence,
-  motion,
-  useMotionValueEvent,
-  useReducedMotion,
-  useScroll,
-  useSpring,
-} from "framer-motion";
-import { ArrowUpRight, CalendarCheck, Menu, ShieldCheck, X } from "lucide-react";
+import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from "framer-motion";
+import { Menu, X } from "lucide-react";
 
 import { BrandMark } from "@/components/ui/BrandMark";
 import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Section";
-import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { cn } from "@/lib/utils";
 import { navItems, site, whatsappLink } from "@/lib/site";
 
@@ -54,15 +46,13 @@ function Wordmark({ onClick }: { onClick?: React.MouseEventHandler<HTMLAnchorEle
     <Link
       href="#inicio"
       onClick={onClick}
-      className="group flex items-center gap-3 rounded-md"
+      className="flex items-center gap-2.5 rounded-md"
       aria-label={`${site.name}, Psicóloga — voltar ao início`}
     >
-      <BrandMark className="w-8 transition-transform duration-300 ease-out group-hover:-rotate-12" />
+      <BrandMark className="w-7" />
       <span className="flex flex-col leading-none">
-        <span className="text-[17px] font-bold tracking-[-0.03em] text-ink">{site.name}</span>
-        <span className="mt-1 text-[11.5px] font-medium tracking-[-0.005em] text-ink-muted">
-          Psicóloga · {site.crp}
-        </span>
+        <span className="text-[16px] font-medium text-ink">{site.name}</span>
+        <span className="mt-1 text-[11px] text-ink-muted">Psicóloga</span>
       </span>
     </Link>
   );
@@ -78,8 +68,7 @@ export function Header() {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
 
-  const { scrollY, scrollYProgress } = useScroll();
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 140, damping: 28, restDelta: 0.001 });
+  const { scrollY } = useScroll();
 
   useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 8));
   useEffect(() => setScrolled(window.scrollY > 8), []);
@@ -164,36 +153,35 @@ export function Header() {
     <>
       <header
         className={cn(
-          "sticky top-0 z-50 h-[var(--header-height)] border-b bg-white/80 backdrop-blur-xl backdrop-saturate-150 transition-[border-color,box-shadow,background-color] duration-200",
-          scrolled ? "border-line shadow-[0_1px_0_rgb(17_24_39/2%),0_8px_24px_rgb(17_24_39/4%)]" : "border-transparent",
+          "fixed inset-x-0 top-0 z-50 h-[var(--header-height)] border-b transition-[background-color,border-color,backdrop-filter] duration-300",
+          scrolled ? "border-line-soft bg-white/85 backdrop-blur-xl" : "border-transparent bg-transparent",
         )}
       >
         <Container className="flex h-full items-center justify-between gap-6">
           <Wordmark />
 
           <nav aria-label="Navegação principal" className="hidden lg:block">
-            <ul className="flex items-center gap-1 rounded-full border border-line-soft bg-white/60 p-1">
+            <ul className="flex items-center gap-8">
               {navItems.map((item) => {
                 const isActive = active === item.id;
                 return (
-                  <li key={item.id} className="relative">
-                    {isActive && (
-                      <motion.span
-                        layoutId="nav-active-pill"
-                        aria-hidden
-                        className="absolute inset-0 rounded-full bg-primary-100 ring-1 ring-primary-200"
-                        transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 36 }}
-                      />
-                    )}
+                  <li key={item.id}>
                     <Link
                       href={`#${item.id}`}
                       aria-current={isActive ? "location" : undefined}
                       className={cn(
-                        "relative z-10 block rounded-full px-3.5 py-1.5 text-[13.5px] font-medium tracking-[-0.01em] transition-colors duration-150",
-                        isActive ? "text-primary-hover" : "text-ink-soft hover:text-ink",
+                        "relative block rounded-sm py-1 text-[14.5px] transition-colors duration-150",
+                        isActive ? "text-primary" : "text-ink-soft hover:text-ink",
                       )}
                     >
                       {item.label}
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "absolute -bottom-1.5 left-1/2 size-1 -translate-x-1/2 rounded-full bg-primary transition-opacity duration-200",
+                          isActive ? "opacity-100" : "opacity-0",
+                        )}
+                      />
                     </Link>
                   </li>
                 );
@@ -203,8 +191,7 @@ export function Header() {
 
           <div className="flex items-center gap-2">
             <ButtonLink href="#agendar" size="md" className="hidden sm:inline-flex">
-              <CalendarCheck className="size-4" aria-hidden />
-              Agendar sessão
+              Agendar
             </ButtonLink>
             <button
               ref={menuButtonRef}
@@ -213,20 +200,13 @@ export function Header() {
               aria-expanded={open}
               aria-controls={DRAWER_ID}
               aria-haspopup="dialog"
-              className="grid size-10 place-items-center rounded-md border border-line bg-surface text-ink shadow-xs transition-colors duration-150 hover:bg-surface-hover focus-visible:shadow-focus lg:hidden"
+              className="grid size-11 place-items-center rounded-full text-ink transition-colors duration-150 hover:bg-white/70 focus-visible:shadow-focus lg:hidden"
             >
               <Menu className="size-5" aria-hidden />
               <span className="sr-only">Abrir menu</span>
             </button>
           </div>
         </Container>
-
-        {/* Reading progress */}
-        <motion.div
-          aria-hidden
-          className="absolute inset-x-0 -bottom-px h-[2px] origin-left bg-progress"
-          style={{ scaleX: reduce ? scrollYProgress : smoothProgress }}
-        />
       </header>
 
       <AnimatePresence>
@@ -237,95 +217,62 @@ export function Header() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: reduce ? 0 : 0.18 }}
+            transition={{ duration: reduce ? 0 : 0.2 }}
           >
-            <div aria-hidden className="absolute inset-0 bg-ink/30 backdrop-blur-sm" onClick={close} />
+            <div aria-hidden className="absolute inset-0 bg-ink/20 backdrop-blur-sm" onClick={close} />
             <motion.div
               ref={drawerRef}
               id={DRAWER_ID}
               role="dialog"
               aria-modal="true"
               aria-label="Menu de navegação"
-              className="absolute inset-y-0 right-0 flex w-full max-w-[420px] flex-col overflow-y-auto bg-surface shadow-raised sm:rounded-l-2xl"
+              className="absolute inset-y-0 right-0 flex w-full max-w-[400px] flex-col overflow-y-auto bg-white sm:rounded-l-3xl"
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={reduce ? { opacity: 0 } : { x: "100%" }}
-              transition={{ duration: reduce ? 0 : 0.26, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: reduce ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="flex h-[var(--header-height)] shrink-0 items-center justify-between border-b border-line-soft px-5 sm:px-6">
+              <div className="flex h-[var(--header-height)] shrink-0 items-center justify-between px-5 sm:px-6">
                 <Wordmark onClick={closeForNavigation} />
                 <button
                   type="button"
                   onClick={close}
-                  className="grid size-10 place-items-center rounded-md border border-line bg-surface text-ink transition-colors duration-150 hover:bg-surface-hover focus-visible:shadow-focus"
+                  className="grid size-11 place-items-center rounded-full text-ink transition-colors duration-150 hover:bg-surface-hover focus-visible:shadow-focus"
                 >
                   <X className="size-5" aria-hidden />
                   <span className="sr-only">Fechar menu</span>
                 </button>
               </div>
 
-              <nav aria-label="Navegação mobile" className="px-3 pt-4 sm:px-4">
-                <ul className="flex flex-col">
+              <nav aria-label="Navegação mobile" className="px-5 pt-8 sm:px-6">
+                <ul className="flex flex-col gap-1">
                   {navItems.map((item, index) => {
                     const isActive = active === item.id;
                     return (
-                      <motion.li
-                        key={item.id}
-                        initial={{ opacity: 0, x: 16 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={reduce ? { duration: 0 } : { delay: 0.06 + index * 0.04, duration: 0.24 }}
-                      >
+                      <li key={item.id}>
                         <Link
                           href={`#${item.id}`}
                           onClick={closeForNavigation}
                           data-autofocus={index === 0 ? "" : undefined}
                           aria-current={isActive ? "location" : undefined}
                           className={cn(
-                            "group flex items-center gap-4 rounded-lg px-3 py-3.5 transition-colors duration-150",
-                            isActive ? "bg-primary-100" : "hover:bg-surface-hover",
+                            "block rounded-lg py-2.5 text-[28px] leading-tight font-normal tracking-[-0.02em] transition-colors duration-150",
+                            isActive ? "text-primary" : "text-ink hover:text-primary",
                           )}
                         >
-                          <span
-                            aria-hidden
-                            className={cn(
-                              "w-6 text-xs font-semibold tabular-nums tracking-[0.02em]",
-                              isActive ? "text-primary" : "text-ink-muted",
-                            )}
-                          >
-                            {String(index + 1).padStart(2, "0")}
-                          </span>
-                          <span
-                            className={cn(
-                              "flex-1 text-[22px] font-semibold tracking-[-0.03em]",
-                              isActive ? "text-primary-hover" : "text-ink",
-                            )}
-                          >
-                            {item.label}
-                          </span>
-                          <ArrowUpRight
-                            aria-hidden
-                            className="size-4 text-ink-muted transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                          />
+                          {item.label}
                         </Link>
-                      </motion.li>
+                      </li>
                     );
                   })}
                 </ul>
               </nav>
 
-              <div className="mt-auto space-y-3 border-t border-line-soft p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-6">
-                <ButtonLink href="#agendar" onClick={closeForNavigation} size="lg" className="w-full">
-                  <CalendarCheck className="size-4" aria-hidden />
-                  Agendar sessão
+              <div className="mt-auto space-y-5 p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:p-6">
+                <ButtonLink href={whatsappLink()} external size="lg" className="w-full">
+                  Agendar pelo WhatsApp
                 </ButtonLink>
-                <ButtonLink href={whatsappLink()} external variant="whatsapp" size="lg" className="w-full">
-                  <WhatsAppIcon className="size-5" />
-                  Conversar no WhatsApp
-                </ButtonLink>
-                <p className="flex items-center justify-center gap-2 pt-2 text-xs text-ink-muted">
-                  <ShieldCheck className="size-3.5 text-primary" aria-hidden />
-                  Psicóloga clínica · {site.crp} · Atendimento online
-                </p>
+                <p className="text-center text-xs text-ink-muted">Psicóloga clínica · {site.crp}</p>
               </div>
             </motion.div>
           </motion.div>

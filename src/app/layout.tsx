@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     siteName: "Psicóloga Fernanda Lima",
     title: site.title,
     description: site.description,
-    images: [{ url: "/psicologa-fernanda-lima-2.png", alt: "Psicóloga Fernanda Lima" }],
+    images: [{ url: "/og-fernanda-lima.jpg", width: 1200, height: 630, alt: "Psicóloga Fernanda Lima" }],
   },
   robots: { index: true, follow: true },
 };
@@ -53,7 +53,7 @@ const jsonLd = {
   description: site.description,
   url: site.url,
   telephone: `+${site.phone}`,
-  image: `${site.url}/psicologa-fernanda-lima-2.png`,
+  image: `${site.url}/og-fernanda-lima.jpg`,
   areaServed: ["BR", "Worldwide"],
   availableLanguage: "pt-BR",
   identifier: site.crp,

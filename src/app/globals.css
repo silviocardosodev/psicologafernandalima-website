@@ -5,7 +5,7 @@
  * Light mode only, like the source system.
  */
 :root {
-  --color-bg: #f6f7fb;
+  --color-bg: #fbfbfe;
   --color-surface: #ffffff;
   --color-surface-hover: #f3f4f8;
   --color-border: #e4e7ee;
@@ -25,6 +25,14 @@
   --color-lavender: #747ff5;
   --color-lavender-soft: #f3efff;
 
+  /* Soft pastel fills (humanised layer, inspired by calm editorial sites) */
+  --color-tint-indigo: #eef0ff;
+  --color-tint-lilac: #f4efff;
+  --color-tint-sky: #e9f2ff;
+  --color-tint-mint: #e8f6f0;
+  --color-tint-rose: #fdf0f4;
+  --color-tint-sand: #fbf4ea;
+
   --color-success-bg: #e8f7ee;
   --color-success: #166534;
   --color-warning-bg: #fff5e1;
@@ -40,8 +48,8 @@
 
   --gradient-hero: radial-gradient(circle at 85% 10%, rgb(255 255 255 / 14%) 0, transparent 40%),
     linear-gradient(155deg, #4f46e5 0%, #312e81 100%);
-  --gradient-soft: radial-gradient(120% 140% at 0% 0%, #e0e2ff 0%, transparent 60%),
-    linear-gradient(180deg, #eef0ff, #fff);
+  --gradient-soft: radial-gradient(70% 60% at 0% 0%, #f4efff 0%, transparent 70%),
+    radial-gradient(60% 60% at 100% 0%, #e9f2ff 0%, transparent 70%), #ffffff;
   --gradient-progress: linear-gradient(90deg, #6f82ff, #8d6ffc);
   --gradient-brand: linear-gradient(145deg, #d8d4ff 0%, #969dff 34%, #747ff5 68%, #6250d6 100%);
 
@@ -69,6 +77,12 @@
   --color-primary-100: var(--color-primary-100);
   --color-lavender: var(--color-lavender);
   --color-lavender-soft: var(--color-lavender-soft);
+  --color-tint-indigo: var(--color-tint-indigo);
+  --color-tint-lilac: var(--color-tint-lilac);
+  --color-tint-sky: var(--color-tint-sky);
+  --color-tint-mint: var(--color-tint-mint);
+  --color-tint-rose: var(--color-tint-rose);
+  --color-tint-sand: var(--color-tint-sand);
   --color-success: var(--color-success);
   --color-success-bg: var(--color-success-bg);
   --color-warning: var(--color-warning);
@@ -81,6 +95,7 @@
   --radius-lg: 14px;
   --radius-xl: 18px;
   --radius-2xl: 24px;
+  --radius-3xl: 32px;
 
   --shadow-xs: var(--shadow-xs);
   --shadow-card: var(--shadow-card);
