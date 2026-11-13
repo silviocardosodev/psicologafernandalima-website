@@ -10,7 +10,7 @@ import { whatsappLink } from "@/lib/site";
 const TOP_AFTER = 1200;
 const SPRING = { type: "spring", stiffness: 300, damping: 22 } as const;
 
-/** Soft pulse ring keyframes (scoped name; the ring itself is hidden under reduced motion). */
+/** Soft pulse ring keyframes (scoped name). Runs 3 cycles only (WCAG 2.2.2); hidden under reduced motion. */
 const pulseCss = `@keyframes fl-fab-pulse{0%{transform:scale(1);opacity:.45}70%,100%{transform:scale(1.55);opacity:0}}`;
 
 export function FloatingActions() {
@@ -35,7 +35,7 @@ export function FloatingActions() {
   };
 
   return (
-    <div className="pointer-events-none fixed right-[calc(1.25rem+env(safe-area-inset-right))] bottom-[calc(1.25rem+env(safe-area-inset-bottom))] z-50 flex flex-col items-end gap-3">
+    <div id="floating-actions" className="pointer-events-none fixed right-[calc(1.25rem+env(safe-area-inset-right))] bottom-[calc(1.25rem+env(safe-area-inset-bottom))] z-50 flex flex-col items-end gap-3">
       <style>{pulseCss}</style>
 
       <AnimatePresence>
@@ -78,7 +78,7 @@ export function FloatingActions() {
           <span
             aria-hidden
             className="absolute inset-0 rounded-full bg-whatsapp motion-reduce:hidden"
-            style={{ animation: "fl-fab-pulse 3.2s cubic-bezier(0.22,1,0.36,1) infinite" }}
+            style={{ animation: "fl-fab-pulse 3.2s cubic-bezier(0.22,1,0.36,1) 1.5s 3 both" }}
           />
           <WhatsAppIcon className="relative size-7" />
         </span>

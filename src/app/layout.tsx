@@ -16,15 +16,16 @@ export const metadata: Metadata = {
   title: { default: site.title, template: "%s | Psicóloga Fernanda Lima" },
   description: site.description,
   keywords: [
-    "psicóloga online",
-    "terapia online para mulheres",
-    "TCC",
+    "psicóloga online para mulheres",
+    "terapia online",
+    "mente acelerada",
+    "não consigo desligar a mente",
+    "autocobrança",
+    "perfeccionismo",
+    "ansiedade",
+    "culpa ao descansar",
     "terapia cognitivo-comportamental",
     "ACT",
-    "ansiedade",
-    "depressão",
-    "pânico",
-    "relacionamentos",
     "Fernanda Lima",
   ],
   alternates: { canonical: "/" },
@@ -33,31 +34,42 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     url: site.url,
     siteName: "Psicóloga Fernanda Lima",
-    title: site.title,
-    description: site.description,
+    title: "Sua cabeça não para? Terapia online para mulheres",
+    description: "Para quem dá conta de tudo — e está cansada de dar conta sozinha. Psicóloga Fernanda Lima, CRP 06/192404.",
     images: [{ url: "/og-fernanda-lima.jpg", width: 1200, height: 630, alt: "Psicóloga Fernanda Lima" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sua cabeça não para? Terapia online para mulheres",
+    description: "Para quem dá conta de tudo — e está cansada de dar conta sozinha.",
+    images: ["/og-fernanda-lima.jpg"],
   },
   robots: { index: true, follow: true },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#4f46e5",
+  themeColor: "#f4efff",
   width: "device-width",
   initialScale: 1,
+  // Lets env(safe-area-inset-*) work (floating WhatsApp button above iOS / Instagram bars).
+  viewportFit: "cover",
 };
 
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": ["MedicalBusiness", "ProfessionalService"],
+  "@id": `${site.url}/#fernanda-lima`,
   name: "Fernanda Lima — Psicóloga Clínica",
   description: site.description,
   url: site.url,
   telephone: `+${site.phone}`,
   image: `${site.url}/og-fernanda-lima.jpg`,
+  address: { "@type": "PostalAddress", addressLocality: "São Paulo", addressRegion: "SP", addressCountry: "BR" },
   areaServed: ["BR", "Worldwide"],
   availableLanguage: "pt-BR",
   identifier: site.crp,
-  knowsAbout: ["Terapia Cognitivo-Comportamental", "Terapia de Aceitação e Compromisso", "Ansiedade", "Depressão", "Transtorno do pânico", "Relacionamentos"],
+  sameAs: [site.instagramUrl],
+  knowsAbout: ["Terapia Cognitivo-Comportamental", "Terapia de Aceitação e Compromisso", "Ansiedade", "Autocobrança", "Perfeccionismo"],
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

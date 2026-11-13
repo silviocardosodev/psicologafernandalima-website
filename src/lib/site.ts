@@ -1,10 +1,12 @@
 export const site = {
   name: "Fernanda Lima",
-  title: "Psicóloga Fernanda Lima | Terapia Online para Mulheres",
+  title: "Psicóloga Fernanda Lima | Terapia online para mulheres com a mente acelerada",
   description:
-    "Terapia online com a psicóloga Fernanda Lima (CRP 06/192404) para mulheres a partir de 18 anos, no Brasil e no exterior. Abordagem em TCC e ACT para ansiedade, depressão, pânico e relacionamentos.",
+    "Terapia online para mulheres com mente acelerada, autocobrança e ansiedade. Psicóloga Fernanda Lima, CRP 06/192404, TCC e ACT — no Brasil e no exterior.",
   url: "https://www.psicologafernandalima.com.br",
   crp: "CRP 06/192404",
+  instagram: "fernandalima.psi",
+  instagramUrl: "https://www.instagram.com/fernandalima.psi/",
   phone: "5511994558021",
   phoneDisplay: "+55 (11) 99455-8021",
   defaultMessage:
@@ -17,9 +19,11 @@ export function whatsappLink(message: string = site.defaultMessage) {
 }
 
 export const navItems = [
-  { id: "ajuda", label: "Como posso ajudar" },
-  { id: "jornada", label: "Como funciona" },
-  { id: "terapia-online", label: "Terapia online" },
+  { id: "para-voce", label: "Pra você" },
   { id: "sobre", label: "Sobre mim" },
+  { id: "como-funciona", label: "Como funciona" },
   { id: "duvidas", label: "Dúvidas" },
 ] as const;
+
+/** Single primary CTA label used everywhere (always opens WhatsApp). */
+export const ctaLabel = "Quero conversar";

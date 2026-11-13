@@ -17,19 +17,21 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Section";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { cn } from "@/lib/utils";
-import { navItems, site, whatsappLink } from "@/lib/site";
+import { ctaLabel, navItems, site, whatsappLink } from "@/lib/site";
 
 const DRAWER_ID = "menu-mobile";
 const SPRING = { type: "spring", stiffness: 300, damping: 22 } as const;
 const PILL_SPRING = { type: "spring", stiffness: 380, damping: 32 } as const;
 
-/** Short helper line under each drawer item (≤ 5 words). */
+/** Elements made `inert` while the drawer is open (everything outside the dialog). */
+const INERT_TARGETS = ["conteudo", "rodape", "floating-actions"];
+
+/** Short helper line under each drawer item (≤ 4 words). */
 const subtitles: Record<(typeof navItems)[number]["id"], string> = {
-  ajuda: "Ansiedade, relações e mais",
-  jornada: "Do primeiro contato à sessão",
-  "terapia-online": "De onde você estiver",
-  sobre: "Minha formação e abordagem",
-  duvidas: "Respostas para perguntas comuns",
+  "para-voce": "Isso fala de você?",
+  sobre: "Quem vai te ouvir",
+  "como-funciona": "Um passo por vez",
+  duvidas: "Perguntas antes de começar",
 };
 
 /** Tracks which nav section is currently crossing the middle band of the viewport. */
@@ -84,6 +86,7 @@ export function Header() {
   const ids = useRef(navItems.map((item) => item.id)).current;
   const active = useActiveSection(ids);
 
+  const headerRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -124,6 +127,13 @@ export function Header() {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
+    // Make everything behind the dialog unreachable (keyboard, pointer, screen readers).
+    const background = [
+      headerRef.current,
+      ...INERT_TARGETS.map((id) => document.getElementById(id)),
+    ].filter((el): el is HTMLElement => el !== null);
+    background.forEach((el) => el.setAttribute("inert", ""));
+
     const focusFirst = window.setTimeout(() => {
       drawerRef.current?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
     }, 30);
@@ -162,6 +172,8 @@ export function Header() {
     return () => {
       window.clearTimeout(focusFirst);
       document.body.style.overflow = previousOverflow;
+      // Remove inert before restoring focus to the (header) menu button.
+      background.forEach((el) => el.removeAttribute("inert"));
       document.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("resize", onResize);
       if (restoreFocusRef.current) menuButton?.focus({ preventScroll: true });
@@ -174,16 +186,17 @@ export function Header() {
   return (
     <>
       <header
+        ref={headerRef}
         className={cn(
           "fixed inset-x-0 top-0 z-50 h-[var(--header-height)] border-b transition-[background-color,border-color,backdrop-filter] duration-300",
           scrolled ? "border-line-soft bg-white/85 backdrop-blur-xl" : "border-transparent bg-transparent",
         )}
       >
-        <Container className="flex h-full items-center justify-between gap-4">
+        <Container className="flex h-full items-center justify-between gap-2 sm:gap-4">
           <Wordmark />
 
           <nav aria-label="Navegação principal" className="hidden lg:block">
-            <ul className="flex items-center gap-0.5">
+            <ul className="flex items-center gap-0 xl:gap-0.5">
               {navItems.map((item) => {
                 const isActive = active === item.id;
                 return (
@@ -200,7 +213,7 @@ export function Header() {
                       href={`#${item.id}`}
                       aria-current={isActive ? "location" : undefined}
                       className={cn(
-                        "relative z-10 block rounded-full px-3 py-1.5 text-[14px] whitespace-nowrap transition-colors duration-300 ease-out-soft focus-visible:shadow-focus",
+                        "relative z-10 block rounded-full px-2.5 py-1.5 text-[14px] xl:px-3 whitespace-nowrap transition-colors duration-300 ease-out-soft focus-visible:shadow-focus",
                         isActive ? "text-primary" : "text-ink-soft hover:text-ink",
                       )}
                     >
@@ -212,15 +225,22 @@ export function Header() {
             </ul>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Same label and destination everywhere: always opens WhatsApp. Compact pill below lg
+                (hidden under 390px, where it doesn't fit; the drawer keeps it). */}
             <motion.div
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.97 }}
               transition={press}
-              className="hidden sm:block lg:hidden xl:block"
+              className="hidden min-[390px]:block"
             >
-              <ButtonLink href="#agendar" size="md" className="hover:translate-y-0 active:translate-y-0">
-                Agendar sessão
+              <ButtonLink
+                href={whatsappLink()}
+                external
+                size="md"
+                className="h-9 px-3.5 text-[13px] hover:translate-y-0 active:translate-y-0 sm:h-11 sm:px-5 sm:text-sm"
+              >
+                {ctaLabel}
               </ButtonLink>
             </motion.div>
             <button
@@ -324,12 +344,9 @@ export function Header() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={reduce ? { duration: 0 } : { ...SPRING, delay: 0.08 + navItems.length * 0.05 }}
               >
-                <ButtonLink href="#agendar" onClick={closeForNavigation} size="lg" className="w-full">
-                  Agendar sessão
-                </ButtonLink>
-                <ButtonLink href={whatsappLink()} external variant="whatsapp" size="lg" className="w-full">
+                <ButtonLink href={whatsappLink()} external onClick={close} size="lg" className="w-full">
                   <WhatsAppIcon />
-                  Conversar no WhatsApp
+                  {ctaLabel}
                 </ButtonLink>
                 <p className="pt-2 text-center text-xs text-ink-muted">Psicóloga clínica · {site.crp}</p>
               </motion.div>

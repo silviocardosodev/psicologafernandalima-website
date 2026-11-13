@@ -16,7 +16,7 @@ import { ArrowRight } from "lucide-react";
 import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Section";
 import { cn } from "@/lib/utils";
-import { whatsappLink } from "@/lib/site";
+import { ctaLabel, site, whatsappLink } from "@/lib/site";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const SPRING = { type: "spring", stiffness: 300, damping: 22 } as const;
@@ -27,9 +27,10 @@ function useDepth(value: MotionValue<number>, depth: number) {
 }
 
 /**
- * Small tag floating around the portrait. `initial`/`animate` are identical on server and
- * client; reduced motion only changes the transition (no entrance delay, no loop).
- * The outer layer follows the pointer parallax, the inner one runs the gentle float.
+ * Small tag floating by the portrait. `initial`/`animate` are identical on server and
+ * client; reduced motion only changes the transition (no entrance delay, no float).
+ * It is never hidden (no opacity:0). The outer layer follows the pointer parallax, the
+ * inner one runs a gentle float limited to 3 cycles in total (WCAG 2.2.2).
  */
 function FloatingTag({
   children,
@@ -53,8 +54,8 @@ function FloatingTag({
   return (
     <motion.div className={cn("absolute z-10", className)} style={{ x, y }}>
       <motion.div
-        initial={{ opacity: 0, y: 8, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
+        initial={{ y: 8, scale: 0.96 }}
+        animate={{ y: 0, scale: 1 }}
         transition={reduce ? { duration: 0 } : { duration: 0.7, delay, ease: EASE }}
       >
         <motion.span
@@ -64,7 +65,7 @@ function FloatingTag({
           )}
           animate={{ y: [0, -drift, 0] }}
           transition={
-            reduce ? { duration: 0 } : { duration: 6, delay: delay + 0.7, repeat: Infinity, ease: "easeInOut" }
+            reduce ? { duration: 0 } : { duration: 6, delay: delay + 0.7, repeat: 2, ease: "easeInOut" }
           }
         >
           {children}
@@ -89,15 +90,12 @@ export function Hero() {
   const archY = useDepth(sy, -8);
   const photoX = useDepth(sx, 12);
   const photoY = useDepth(sy, 8);
-  const tagAX = useDepth(sx, 26);
-  const tagAY = useDepth(sy, 18);
-  const tagBX = useDepth(sx, -22);
-  const tagBY = useDepth(sy, 14);
-  const tagCX = useDepth(sx, 18);
-  const tagCY = useDepth(sy, -16);
+  const tagX = useDepth(sx, 22);
+  const tagY = useDepth(sy, 16);
 
+  // Parallax only on desktop: fine pointer + wide viewport, and motion allowed.
   useEffect(() => {
-    const query = window.matchMedia("(pointer: fine)");
+    const query = window.matchMedia("(pointer: fine) and (min-width: 1024px)");
     const update = () => {
       parallaxOn.current = query.matches && !reduce;
       if (!parallaxOn.current) {
@@ -139,12 +137,12 @@ export function Hero() {
         <div className="max-w-xl">
           <h1
             id="hero-titulo"
-            className="text-[clamp(2.6rem,5vw,4.1rem)] leading-[1.08] font-[650] tracking-[-0.035em] text-balance text-ink"
+            className="text-[clamp(2.25rem,4.6vw,4rem)] leading-[1.08] font-[650] tracking-[-0.035em] text-balance text-ink"
           >
-            Você não precisa carregar tudo sozinha
+            Sua cabeça não para. Nem quando você pode parar.
           </h1>
           <p className="mt-6 max-w-md text-[17px] leading-relaxed text-ink-soft sm:text-lg">
-            Terapia online para mulheres, com acolhimento e base científica (TCC e ACT).
+            Terapia online para mulheres que dão conta de tudo — e estão cansadas de dar conta sozinhas.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-4">
@@ -155,14 +153,14 @@ export function Hero() {
                 size="lg"
                 className="hover:translate-y-0 active:translate-y-0"
               >
-                Agendar sessão
+                {ctaLabel}
               </ButtonLink>
             </motion.div>
             <Link
-              href="#sobre"
+              href="#como-funciona"
               className="group inline-flex items-center gap-2 rounded-sm text-[15px] text-ink-soft transition-colors duration-300 ease-out-soft hover:text-primary"
             >
-              Conhecer meu trabalho
+              Como funciona
               <ArrowRight
                 aria-hidden
                 className="size-4 transition-transform duration-300 ease-out-soft group-hover:translate-x-1 group-focus-visible:translate-x-1"
@@ -192,28 +190,14 @@ export function Hero() {
             />
           </motion.div>
 
-          <FloatingTag tone="bg-white" delay={0.3} x={tagAX} y={tagAY} className="top-[14%] -left-2 sm:-left-8">
-            Acolhimento
-          </FloatingTag>
           <FloatingTag
-            tone="bg-tint-lilac"
-            delay={0.45}
-            drift={5}
-            x={tagBX}
-            y={tagBY}
-            className="top-[38%] right-1 sm:top-1/2 sm:-right-6"
+            tone="bg-white"
+            delay={0.3}
+            x={tagX}
+            y={tagY}
+            className="bottom-6 left-2 sm:bottom-10 sm:left-auto sm:-right-4"
           >
-            TCC &amp; ACT
-          </FloatingTag>
-          <FloatingTag
-            tone="bg-tint-indigo"
-            delay={0.6}
-            drift={7}
-            x={tagCX}
-            y={tagCY}
-            className="bottom-8 left-2 sm:-left-6"
-          >
-            Online · Brasil e exterior
+            {site.crp} · TCC e ACT
           </FloatingTag>
         </div>
       </Container>

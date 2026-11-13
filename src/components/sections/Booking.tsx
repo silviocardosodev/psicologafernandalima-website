@@ -2,19 +2,19 @@
 
 import { useCallback, useId, useMemo, useRef, useState } from "react";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, Clock, HandHeart, Pencil, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Pencil, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { Container, Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
-import { whatsappLink } from "@/lib/site";
+import { ctaLabel, whatsappLink } from "@/lib/site";
 import { useRadioKeys } from "@/lib/useRadioKeys";
 import { cn } from "@/lib/utils";
 
 const NAME_MAX = 60;
 
-const reasons = ["Ansiedade", "Relacionamentos", "Autoestima", "Autocobrança", "Depressão", "Pânico", "Outro"];
+const reasons = ["Mente acelerada", "Autocobrança", "Cansaço", "Ansiedade", "Relacionamentos", "Outro"];
 
 const periods = ["Manhã", "Tarde", "Noite", "Flexível"] as const;
 type Period = (typeof periods)[number];
@@ -28,11 +28,8 @@ const steps = [
   { title: "Qual período prefere?", short: "Período" },
 ];
 
-const reassurance = [
-  { icon: Clock, label: "Resposta com calma" },
-  { icon: HandHeart, label: "Sem compromisso" },
-  { icon: ShieldCheck, label: "Nada é salvo aqui" },
-];
+type Field = "reasons" | "period" | "first";
+type Errors = Partial<Record<Field, string>>;
 
 const spring = { type: "spring", stiffness: 300, damping: 22 } as const;
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -59,17 +56,22 @@ export function Booking() {
   const [selected, setSelected] = useState<string[]>([]);
   const [period, setPeriod] = useState<Period | "">("");
   const [firstTime, setFirstTime] = useState<FirstTime | "">("");
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Errors>({});
   const [done, setDone] = useState(false);
+  const [open, setOpen] = useState(false);
+  const reasonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  const periodKeys = useRadioKeys(periods, period, (v) => {
+  const clearError = (f: Field) => setErrors((e) => (e[f] ? { ...e, [f]: undefined } : e));
+  const choosePeriod = (v: Period) => {
     setPeriod(v);
-    setError(null);
-  });
-  const firstKeys = useRadioKeys(firstTimeOptions, firstTime, (v) => {
+    clearError("period");
+  };
+  const chooseFirst = (v: FirstTime) => {
     setFirstTime(v);
-    setError(null);
-  });
+    clearError("first");
+  };
+  const periodKeys = useRadioKeys(periods, period, choosePeriod);
+  const firstKeys = useRadioKeys(firstTimeOptions, firstTime, chooseFirst);
 
   // Focus the new step heading once it mounts (after the exit animation).
   const headingRef = useCallback((el: HTMLHeadingElement | null) => {
@@ -92,17 +94,29 @@ export function Booking() {
     return lines.join("\n");
   }, [name, selected, period, firstTime]);
 
-  function validate(s: number) {
-    if (s === 1 && selected.length === 0) return "Escolha pelo menos uma opção — pode ser “Outro”.";
-    if (s === 2 && !period) return "Escolha um período.";
-    if (s === 2 && !firstTime) return "Conte se é sua primeira vez na terapia.";
-    return null;
+  function validate(s: number): Errors {
+    const e: Errors = {};
+    if (s === 1 && selected.length === 0) e.reasons = "Escolha pelo menos uma opção — pode ser “Outro”.";
+    if (s === 2 && !period) e.period = "Escolha um período.";
+    if (s === 2 && !firstTime) e.first = "Conte se é sua primeira vez na terapia.";
+    return e;
+  }
+
+  // On error, focus moves to the first invalid control; its group carries aria-describedby
+  // pointing to the message, so it's read once (no extra role="alert").
+  function focusFirstInvalid(e: Errors) {
+    if (e.reasons) reasonRefs.current[0]?.focus();
+    else if (e.period) periodKeys.refs.current[Math.max(0, period ? periods.indexOf(period) : 0)]?.focus();
+    else if (e.first) firstKeys.refs.current[Math.max(0, firstTime ? firstTimeOptions.indexOf(firstTime) : 0)]?.focus();
   }
 
   function next() {
-    const err = validate(step);
-    setError(err);
-    if (err) return;
+    const e = validate(step);
+    setErrors(e);
+    if (Object.keys(e).length) {
+      focusFirstInvalid(e);
+      return;
+    }
     setDir(1);
     shouldFocus.current = true;
     if (step < steps.length - 1) setStep(step + 1);
@@ -110,7 +124,7 @@ export function Booking() {
   }
 
   function back() {
-    setError(null);
+    setErrors({});
     setDir(-1);
     shouldFocus.current = true;
     if (done) setDone(false);
@@ -118,7 +132,7 @@ export function Booking() {
   }
 
   function goTo(s: number) {
-    setError(null);
+    setErrors({});
     setDir(done || s < step ? -1 : 1);
     shouldFocus.current = true;
     setDone(false);
@@ -126,398 +140,417 @@ export function Booking() {
   }
 
   function toggleReason(r: string) {
-    setError(null);
+    clearError("reasons");
     setSelected((prev) => (prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]));
   }
 
   const progress = done ? 100 : ((step + 1) / (steps.length + 1)) * 100;
-  const errorId = `${uid}-erro`;
+  const errId = (f: Field) => `${uid}-erro-${f}`;
+  const panelId = `${uid}-assistente`;
+  const stepLabel = (i: number) => <span className="sr-only">Passo {i + 1} de {steps.length}: </span>;
   const t = reduce ? { duration: 0 } : spring;
+
+  const errorText = (f: Field) =>
+    errors[f] ? (
+      <p id={errId(f)} className="mt-2 text-sm font-medium text-[#b42318]">
+        {errors[f]}
+      </p>
+    ) : null;
+
+  const headingClass = "text-xl font-semibold tracking-[-0.015em] text-ink outline-none";
 
   return (
     <Section id="agendar" aria-labelledby="agendar-titulo" className="py-12 sm:py-16 lg:py-20">
       <Container>
-        <div className="grid items-center gap-10 rounded-3xl bg-[linear-gradient(160deg,var(--color-tint-lilac)_0%,var(--color-tint-violet)_45%,#ffffff_100%)] px-5 py-12 sm:px-10 sm:py-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14 lg:p-16">
-          {/* Left: pitch */}
-          <Reveal>
+        <div className="rounded-3xl bg-[linear-gradient(180deg,var(--color-tint-lilac)_0%,var(--color-tint-mist)_55%,#ffffff_100%)] px-5 py-14 text-center sm:px-10 sm:py-16 lg:px-16 lg:py-20">
+          <Reveal className="mx-auto max-w-2xl">
             <h2
               id="agendar-titulo"
               className="text-[32px] leading-[1.12] font-[650] tracking-[-0.03em] text-balance text-ink sm:text-[40px] lg:text-[46px]"
             >
-              Pronta para dar o primeiro passo?
+              Que tal começar por uma conversa?
             </h2>
-            <p className="mt-4 max-w-md text-base leading-relaxed text-ink-soft sm:text-[17px]">
-              Três perguntas rápidas e sua mensagem chega pronta no WhatsApp.
+            <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-ink-soft sm:text-[17px]">
+              Sem compromisso. Você me escreve e combinamos o melhor horário.
             </p>
-            <ul className="mt-8 flex flex-wrap gap-2 lg:flex-col lg:gap-3">
-              {reassurance.map(({ icon: Icon, label }) => (
-                <li key={label} className="inline-flex items-center gap-2.5 text-sm text-ink-soft">
-                  <span className="grid size-8 place-items-center rounded-full bg-white text-primary">
-                    <Icon aria-hidden className="size-4" />
-                  </span>
-                  {label}
-                </li>
-              ))}
-            </ul>
+            <a
+              href={whatsappLink()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-8 inline-flex h-14 items-center justify-center gap-2.5 rounded-full bg-whatsapp px-9 text-base font-medium text-white shadow-[0_8px_24px_rgb(15_122_59/24%)] transition-[background-color,transform] duration-150 hover:-translate-y-px hover:bg-whatsapp-hover focus-visible:shadow-focus active:translate-y-px sm:h-15 sm:text-[17px]"
+            >
+              <WhatsAppIcon className="size-5" />
+              {ctaLabel}
+              <span className="sr-only"> no WhatsApp (abre em nova aba)</span>
+            </a>
+
+            <div className="mt-6">
+              <button
+                type="button"
+                aria-expanded={open}
+                aria-controls={panelId}
+                onClick={() => setOpen((o) => !o)}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 text-[15px] font-medium text-primary underline-offset-4 transition-colors hover:bg-white/70 hover:text-primary-hover hover:underline focus-visible:shadow-focus"
+              >
+                Prefere que eu escreva a mensagem por você?
+                <motion.span aria-hidden animate={{ rotate: open ? 180 : 0 }} transition={t} className="grid place-items-center">
+                  <ChevronDown className="size-4" />
+                </motion.span>
+              </button>
+            </div>
           </Reveal>
 
-          {/* Right: wizard card */}
-          <Reveal delay={0.1} className="min-w-0">
-            <div className="rounded-3xl bg-white shadow-[0_12px_40px_rgb(49_46_129/8%)]">
-              <div className="px-5 pt-5 sm:px-8 sm:pt-7">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs font-semibold tracking-[0.12em] text-ink-muted uppercase" aria-live="polite">
-                    {done ? "Tudo pronto" : `Passo ${step + 1} de ${steps.length}`}
-                  </p>
-                  <LayoutGroup id={`${uid}-dots`}>
-                    <ol className="flex items-center gap-1.5" aria-label="Etapas">
-                      {steps.map((s, i) => {
-                        const complete = done || i < step;
-                        const current = !done && i === step;
-                        return (
-                          <li key={s.short}>
-                            <button
-                              type="button"
-                              onClick={() => goTo(i)}
-                              disabled={!complete}
-                              aria-current={current ? "step" : undefined}
-                              aria-label={`${s.short}${complete ? " (concluído, editar)" : current ? " (atual)" : ""}`}
-                              className={cn(
-                                "relative grid size-7 place-items-center rounded-full text-xs font-semibold transition-colors duration-150 focus-visible:shadow-focus disabled:cursor-default",
-                                complete && "bg-primary-100 text-primary hover:bg-primary-200",
-                                current && "text-white",
-                                !complete && !current && "bg-tint-mist text-ink-muted",
-                              )}
-                            >
-                              {current && (
-                                <motion.span
-                                  layoutId="booking-dot"
-                                  aria-hidden
-                                  className="absolute inset-0 rounded-full bg-primary"
-                                  transition={t}
-                                />
-                              )}
-                              <span className="relative">
-                                {complete ? <Check aria-hidden className="size-3.5" strokeWidth={3} /> : i + 1}
-                              </span>
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ol>
-                  </LayoutGroup>
-                </div>
-                <div
-                  className="mt-4 h-1.5 overflow-hidden rounded-full bg-tint-lilac"
-                  role="progressbar"
-                  aria-label="Progresso"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={Math.round(progress)}
+          <div id={panelId}>
+            <AnimatePresence initial={false}>
+              {open && (
+                <motion.div
+                  key="assistente"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={reduce ? { duration: 0 } : { duration: 0.4, ease }}
+                  className="overflow-hidden"
                 >
-                  <motion.div
-                    className="h-full rounded-full bg-progress"
-                    initial={false}
-                    animate={{ width: `${progress}%` }}
-                    transition={t}
-                  />
-                </div>
-              </div>
-
-              <form
-                noValidate
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (!done) next();
-                }}
-                className="overflow-hidden px-5 py-6 sm:px-8 sm:py-7"
-              >
-                <div className="relative min-h-[272px]">
-                  <AnimatePresence mode="wait" initial={false} custom={dir}>
-                    <motion.div
-                      key={done ? "done" : step}
-                      custom={dir}
-                      variants={slide}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
-                      transition={reduce ? { duration: 0 } : { duration: 0.24, ease }}
-                    >
-                      {!done && step === 0 && (
-                        <div>
-                          <h3
-                            ref={headingRef}
-                            tabIndex={-1}
-                            className="text-xl font-semibold tracking-[-0.015em] text-ink outline-none"
-                          >
-                            {steps[0].title}
-                          </h3>
-                          <p className="mt-1.5 text-sm text-ink-soft">Opcional — pode ser um apelido.</p>
-                          <label htmlFor={`${uid}-nome`} className="mt-6 block text-sm font-medium text-ink">
-                            Seu nome
-                          </label>
-                          <input
-                            id={`${uid}-nome`}
-                            type="text"
-                            value={name}
-                            maxLength={NAME_MAX}
-                            onChange={(e) => setName(e.target.value)}
-                            autoComplete="given-name"
-                            placeholder="Ex.: Ana"
-                            className="mt-2 h-12 w-full rounded-full bg-tint-mist px-5 text-base text-ink outline-none transition-[background-color,box-shadow] duration-150 placeholder:text-ink-muted hover:bg-tint-lilac focus:bg-white focus:shadow-focus"
-                          />
-                        </div>
-                      )}
-
-                      {!done && step === 1 && (
-                        <fieldset aria-describedby={error ? errorId : undefined}>
-                          <legend className="block w-full p-0">
-                            <h3
-                              ref={headingRef}
-                              tabIndex={-1}
-                              className="text-xl font-semibold tracking-[-0.015em] text-ink outline-none"
-                            >
-                              {steps[1].title}
-                            </h3>
-                          </legend>
-                          <p className="mt-1.5 text-sm text-ink-soft">Escolha quantas quiser.</p>
-                          <div className="mt-5 flex flex-wrap gap-2">
-                            {reasons.map((r, i) => {
-                              const on = selected.includes(r);
+                  <div className="mx-auto mt-6 max-w-xl rounded-3xl bg-white text-left shadow-[0_12px_40px_rgb(49_46_129/8%)]">
+                    <div className="px-5 pt-5 sm:px-8 sm:pt-7">
+                      <p className="text-sm text-ink-soft">Leva menos de 1 minuto. Sua mensagem chega pronta no WhatsApp.</p>
+                      <div className="mt-4 flex items-center justify-between gap-3">
+                        <p className="text-xs font-semibold tracking-[0.12em] text-ink-muted uppercase">
+                          {done ? "Tudo pronto" : `Passo ${step + 1} de ${steps.length}`}
+                        </p>
+                        <LayoutGroup id={`${uid}-dots`}>
+                          <ol className="flex items-center gap-1.5" aria-label="Etapas">
+                            {steps.map((s, i) => {
+                              const complete = done || i < step;
+                              const current = !done && i === step;
                               return (
-                                <motion.button
-                                  key={r}
-                                  type="button"
-                                  aria-pressed={on}
-                                  onClick={() => toggleReason(r)}
-                                  initial={{ opacity: 0, y: 6 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  transition={
-                                    reduce ? { duration: 0 } : { ...spring, opacity: { duration: 0.25, delay: i * 0.03 } }
-                                  }
-                                  className={cn(
-                                    "inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-sm transition-colors duration-150 focus-visible:shadow-focus",
-                                    on ? "bg-primary text-white" : "bg-tint-lilac text-ink-soft hover:bg-tint-violet hover:text-ink",
-                                  )}
-                                >
-                                  {on && <Check aria-hidden className="size-3.5" strokeWidth={2.75} />}
-                                  {r}
-                                </motion.button>
-                              );
-                            })}
-                          </div>
-                        </fieldset>
-                      )}
-
-                      {!done && step === 2 && (
-                        <div>
-                          <h3
-                            ref={headingRef}
-                            tabIndex={-1}
-                            className="text-xl font-semibold tracking-[-0.015em] text-ink outline-none"
-                          >
-                            {steps[2].title}
-                          </h3>
-                          <p id={`${uid}-periodo`} className="sr-only">
-                            Período preferido para as sessões
-                          </p>
-                          <LayoutGroup id={`${uid}-period`}>
-                            <div
-                              role="radiogroup"
-                              aria-labelledby={`${uid}-periodo`}
-                              aria-required="true"
-                              className="mt-5 grid grid-cols-2 gap-2.5"
-                            >
-                              {periods.map((p, i) => {
-                                const on = period === p;
-                                return (
-                                  <motion.button
-                                    key={p}
-                                    ref={(el) => {
-                                      periodKeys.refs.current[i] = el;
-                                    }}
-                                    type="button"
-                                    role="radio"
-                                    aria-checked={on}
-                                    tabIndex={periodKeys.tabIndexFor(i)}
-                                    onKeyDown={(e) => periodKeys.onKeyDown(e, i)}
-                                    onClick={() => {
-                                      setPeriod(p);
-                                      setError(null);
-                                    }}
-                                    whileHover={{ y: -2 }}
-                                    whileTap={{ scale: 0.97 }}
-                                    transition={t}
-                                    className={cn(
-                                      "relative flex h-14 items-center justify-between rounded-2xl px-4 text-left text-sm font-semibold transition-colors duration-150 focus-visible:shadow-focus",
-                                      on ? "text-primary-deep" : "bg-tint-mist text-ink hover:bg-tint-lilac",
-                                    )}
-                                  >
-                                    {on && (
-                                      <motion.span
-                                        layoutId="booking-period"
-                                        aria-hidden
-                                        className="absolute inset-0 rounded-2xl bg-tint-violet ring-1 ring-primary/30"
-                                        transition={t}
-                                      />
-                                    )}
-                                    <span className="relative">{p}</span>
-                                    <span
-                                      aria-hidden
-                                      className={cn(
-                                        "relative grid size-4 place-items-center rounded-full",
-                                        on ? "bg-primary" : "bg-white ring-1 ring-line-control/50",
-                                      )}
-                                    >
-                                      {on && <span className="size-1.5 rounded-full bg-white" />}
-                                    </span>
-                                  </motion.button>
-                                );
-                              })}
-                            </div>
-                          </LayoutGroup>
-
-                          <p id={`${uid}-primeira`} className="mt-6 text-sm font-medium text-ink">
-                            Primeira vez na terapia?
-                          </p>
-                          <LayoutGroup id={`${uid}-first`}>
-                            <div
-                              role="radiogroup"
-                              aria-labelledby={`${uid}-primeira`}
-                              aria-required="true"
-                              className="mt-3 inline-flex rounded-full bg-tint-mist p-1"
-                            >
-                              {firstTimeOptions.map((o, i) => {
-                                const on = firstTime === o;
-                                return (
+                                <li key={s.short}>
                                   <button
-                                    key={o}
-                                    ref={(el) => {
-                                      firstKeys.refs.current[i] = el;
-                                    }}
                                     type="button"
-                                    role="radio"
-                                    aria-checked={on}
-                                    tabIndex={firstKeys.tabIndexFor(i)}
-                                    onKeyDown={(e) => firstKeys.onKeyDown(e, i)}
-                                    onClick={() => {
-                                      setFirstTime(o);
-                                      setError(null);
-                                    }}
+                                    onClick={() => goTo(i)}
+                                    disabled={!complete}
+                                    aria-current={current ? "step" : undefined}
+                                    aria-label={`${s.short}${complete ? " (concluído, editar)" : current ? " (atual)" : ""}`}
                                     className={cn(
-                                      "relative h-9 min-w-20 rounded-full px-5 text-sm font-medium transition-colors duration-150 focus-visible:shadow-focus",
-                                      on ? "text-white" : "text-ink-soft hover:text-ink",
+                                      "relative grid size-7 place-items-center rounded-full text-xs font-semibold transition-colors duration-150 focus-visible:shadow-focus disabled:cursor-default",
+                                      complete && "bg-primary-100 text-primary hover:bg-primary-200",
+                                      current && "text-white",
+                                      !complete && !current && "bg-tint-mist text-ink-muted",
                                     )}
                                   >
-                                    {on && (
+                                    {current && (
                                       <motion.span
-                                        layoutId="booking-first"
+                                        layoutId="booking-dot"
                                         aria-hidden
                                         className="absolute inset-0 rounded-full bg-primary"
                                         transition={t}
                                       />
                                     )}
-                                    <span className="relative">{o}</span>
+                                    <span className="relative">
+                                      {complete ? <Check aria-hidden className="size-3.5" strokeWidth={3} /> : i + 1}
+                                    </span>
                                   </button>
-                                );
-                              })}
-                            </div>
-                          </LayoutGroup>
-                        </div>
-                      )}
+                                </li>
+                              );
+                            })}
+                          </ol>
+                        </LayoutGroup>
+                      </div>
+                      <div
+                        className="mt-4 h-1.5 overflow-hidden rounded-full bg-tint-lilac"
+                        role="progressbar"
+                        aria-label="Progresso"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={Math.round(progress)}
+                      >
+                        <motion.div
+                          className="h-full rounded-full bg-progress"
+                          initial={false}
+                          animate={{ width: `${progress}%` }}
+                          transition={t}
+                        />
+                      </div>
+                    </div>
 
-                      {done && (
-                        <div>
-                          <h3
-                            ref={headingRef}
-                            tabIndex={-1}
-                            className="text-xl font-semibold tracking-[-0.015em] text-ink outline-none"
-                          >
-                            Sua mensagem está pronta
-                          </h3>
-                          <p className="mt-1.5 text-sm text-ink-soft">Você ainda pode editar no WhatsApp.</p>
-                          <figure className="mt-5 rounded-3xl bg-tint-mist p-4">
-                            <figcaption className="sr-only">Prévia da mensagem</figcaption>
-                            <motion.div
-                              initial={{ opacity: 0, y: 10, scale: 0.97 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              transition={reduce ? { duration: 0 } : { ...spring, delay: 0.1 }}
-                              className="ml-auto max-w-[92%] origin-bottom-right rounded-2xl rounded-br-md bg-white px-4 py-3 text-[14px] leading-relaxed whitespace-pre-line text-ink ring-1 ring-primary-200"
-                            >
-                              {message}
-                            </motion.div>
-                          </figure>
-                          <button
-                            type="button"
-                            onClick={() => goTo(0)}
-                            className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-primary transition-colors hover:bg-tint-lilac hover:text-primary-hover focus-visible:shadow-focus"
-                          >
-                            <Pencil aria-hidden className="size-3.5" />
-                            Editar
-                          </button>
-                        </div>
-                      )}
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-
-                <p
-                  id={errorId}
-                  role="alert"
-                  className={cn("min-h-5 text-sm font-medium text-[#b42318]", !error && "sr-only")}
-                >
-                  {error}
-                </p>
-
-                {done ? (
-                  <div className="mt-3 space-y-3">
-                    <motion.a
-                      href={whatsappLink(message)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      whileHover={{ y: -2 }}
-                      whileTap={{ scale: 0.98 }}
-                      transition={t}
-                      className="flex h-14 w-full items-center justify-center gap-2.5 rounded-full bg-whatsapp px-6 text-base font-medium text-white shadow-[0_8px_24px_rgb(15_122_59/24%)] transition-colors hover:bg-whatsapp-hover focus-visible:shadow-focus"
+                    <form
+                      noValidate
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!done) next();
+                      }}
+                      className="overflow-hidden px-5 py-6 sm:px-8 sm:py-7"
                     >
-                      <WhatsAppIcon className="size-5" />
-                      Enviar pelo WhatsApp
-                      <span className="sr-only"> (abre em nova aba)</span>
-                    </motion.a>
-                    <Button variant="ghost" onClick={back} className="px-3">
-                      <ArrowLeft aria-hidden className="size-4" />
-                      Voltar
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <Button variant="ghost" onClick={back} disabled={step === 0} className="px-3">
-                      <ArrowLeft aria-hidden className="size-4" />
-                      Voltar
-                    </Button>
-                    <Button type="submit" variant="primary" aria-describedby={error ? errorId : undefined}>
-                      {step === steps.length - 1 ? "Ver mensagem" : step === 0 && !name.trim() ? "Pular" : "Continuar"}
-                      <ArrowRight aria-hidden className="size-4" />
-                    </Button>
-                  </div>
-                )}
-              </form>
+                      <div className="relative min-h-[272px]">
+                        <AnimatePresence mode="wait" initial={false} custom={dir}>
+                          <motion.div
+                            key={done ? "done" : step}
+                            custom={dir}
+                            variants={slide}
+                            initial="enter"
+                            animate="center"
+                            exit="exit"
+                            transition={reduce ? { duration: 0 } : { duration: 0.24, ease }}
+                          >
+                            {!done && step === 0 && (
+                              <div>
+                                <h3 ref={headingRef} tabIndex={-1} className={headingClass}>
+                                  {stepLabel(0)}
+                                  {steps[0].title}
+                                </h3>
+                                <p className="mt-1.5 text-sm text-ink-soft">Opcional — pode ser um apelido.</p>
+                                <label htmlFor={`${uid}-nome`} className="mt-6 block text-sm font-medium text-ink">
+                                  Seu nome
+                                </label>
+                                <input
+                                  id={`${uid}-nome`}
+                                  type="text"
+                                  value={name}
+                                  maxLength={NAME_MAX}
+                                  onChange={(e) => setName(e.target.value)}
+                                  autoComplete="given-name"
+                                  placeholder="Ex.: Ana"
+                                  className="mt-2 h-12 w-full rounded-full border border-line-control bg-white px-5 text-base text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-ink-muted hover:border-ink-soft focus:border-primary focus:shadow-focus"
+                                />
+                              </div>
+                            )}
 
-              <p className="border-t border-line-soft px-5 py-4 text-center text-sm text-ink-soft sm:px-8">
-                Prefere a mensagem padrão?{" "}
-                <a
-                  href={whatsappLink()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-sm font-medium text-primary underline-offset-4 hover:text-primary-hover hover:underline"
-                >
-                  Abrir WhatsApp
-                  <span className="sr-only"> (abre em nova aba)</span>
-                </a>
-              </p>
-            </div>
-          </Reveal>
+                            {!done && step === 1 && (
+                              <fieldset>
+                                <legend className="block w-full p-0">
+                                  <h3 ref={headingRef} tabIndex={-1} className={headingClass}>
+                                    {stepLabel(1)}
+                                    {steps[1].title}
+                                  </h3>
+                                </legend>
+                                <p className="mt-1.5 text-sm text-ink-soft">Escolha quantas quiser.</p>
+                                <div className="mt-5 flex flex-wrap gap-2">
+                                  {reasons.map((r, i) => {
+                                    const on = selected.includes(r);
+                                    return (
+                                      <motion.button
+                                        key={r}
+                                        ref={(el) => {
+                                          reasonRefs.current[i] = el;
+                                        }}
+                                        type="button"
+                                        aria-pressed={on}
+                                        aria-describedby={errors.reasons ? errId("reasons") : undefined}
+                                        onClick={() => toggleReason(r)}
+                                        whileTap={{ scale: 0.95 }}
+                                        transition={t}
+                                        className={cn(
+                                          "inline-flex h-10 items-center gap-1.5 rounded-full border px-4 text-sm transition-colors duration-150 focus-visible:shadow-focus",
+                                          on
+                                            ? "border-primary bg-primary text-white"
+                                            : "border-line-control bg-white text-ink hover:bg-tint-lilac",
+                                        )}
+                                      >
+                                        {on && <Check aria-hidden className="size-3.5" strokeWidth={2.75} />}
+                                        {r}
+                                      </motion.button>
+                                    );
+                                  })}
+                                </div>
+                                {errorText("reasons")}
+                              </fieldset>
+                            )}
+
+                            {!done && step === 2 && (
+                              <div>
+                                <h3 ref={headingRef} tabIndex={-1} className={headingClass}>
+                                  {stepLabel(2)}
+                                  {steps[2].title}
+                                </h3>
+                                <p id={`${uid}-periodo`} className="sr-only">
+                                  Período preferido para as sessões
+                                </p>
+                                <LayoutGroup id={`${uid}-period`}>
+                                  <div
+                                    role="radiogroup"
+                                    aria-labelledby={`${uid}-periodo`}
+                                    aria-required="true"
+                                    aria-invalid={errors.period ? true : undefined}
+                                    aria-describedby={errors.period ? errId("period") : undefined}
+                                    className="mt-5 grid grid-cols-2 gap-2.5"
+                                  >
+                                    {periods.map((p, i) => {
+                                      const on = period === p;
+                                      return (
+                                        <motion.button
+                                          key={p}
+                                          ref={(el) => {
+                                            periodKeys.refs.current[i] = el;
+                                          }}
+                                          type="button"
+                                          role="radio"
+                                          aria-checked={on}
+                                          tabIndex={periodKeys.tabIndexFor(i)}
+                                          onKeyDown={(e) => periodKeys.onKeyDown(e, i)}
+                                          onClick={() => choosePeriod(p)}
+                                          whileHover={{ y: -2 }}
+                                          whileTap={{ scale: 0.97 }}
+                                          transition={t}
+                                          className={cn(
+                                            "relative flex h-14 items-center justify-between rounded-2xl border px-4 text-left text-sm font-semibold transition-colors duration-150 focus-visible:shadow-focus",
+                                            on
+                                              ? "border-primary text-primary-deep"
+                                              : errors.period
+                                                ? "border-[#b42318] bg-white text-ink hover:bg-tint-lilac"
+                                                : "border-line-control bg-white text-ink hover:bg-tint-lilac",
+                                          )}
+                                        >
+                                          {on && (
+                                            <motion.span
+                                              layoutId="booking-period"
+                                              aria-hidden
+                                              className="absolute inset-0 rounded-[15px] bg-tint-violet"
+                                              transition={t}
+                                            />
+                                          )}
+                                          <span className="relative">{p}</span>
+                                          <span
+                                            aria-hidden
+                                            className={cn(
+                                              "relative grid size-4 place-items-center rounded-full",
+                                              on ? "bg-primary" : "bg-white ring-1 ring-line-control",
+                                            )}
+                                          >
+                                            {on && <span className="size-1.5 rounded-full bg-white" />}
+                                          </span>
+                                        </motion.button>
+                                      );
+                                    })}
+                                  </div>
+                                </LayoutGroup>
+                                {errorText("period")}
+
+                                <p id={`${uid}-primeira`} className="mt-6 text-sm font-medium text-ink">
+                                  Primeira vez na terapia?
+                                </p>
+                                <LayoutGroup id={`${uid}-first`}>
+                                  <div
+                                    role="radiogroup"
+                                    aria-labelledby={`${uid}-primeira`}
+                                    aria-required="true"
+                                    aria-invalid={errors.first ? true : undefined}
+                                    aria-describedby={errors.first ? errId("first") : undefined}
+                                    className={cn(
+                                      "mt-3 inline-flex rounded-full border bg-white p-1",
+                                      errors.first ? "border-[#b42318]" : "border-line-control",
+                                    )}
+                                  >
+                                    {firstTimeOptions.map((o, i) => {
+                                      const on = firstTime === o;
+                                      return (
+                                        <button
+                                          key={o}
+                                          ref={(el) => {
+                                            firstKeys.refs.current[i] = el;
+                                          }}
+                                          type="button"
+                                          role="radio"
+                                          aria-checked={on}
+                                          tabIndex={firstKeys.tabIndexFor(i)}
+                                          onKeyDown={(e) => firstKeys.onKeyDown(e, i)}
+                                          onClick={() => chooseFirst(o)}
+                                          className={cn(
+                                            "relative h-9 min-w-20 rounded-full px-5 text-sm font-medium transition-colors duration-150 focus-visible:shadow-focus",
+                                            on ? "text-white" : "text-ink-soft hover:text-ink",
+                                          )}
+                                        >
+                                          {on && (
+                                            <motion.span
+                                              layoutId="booking-first"
+                                              aria-hidden
+                                              className="absolute inset-0 rounded-full bg-primary"
+                                              transition={t}
+                                            />
+                                          )}
+                                          <span className="relative">{o}</span>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </LayoutGroup>
+                                {errorText("first")}
+                              </div>
+                            )}
+
+                            {done && (
+                              <div>
+                                <h3 ref={headingRef} tabIndex={-1} className={headingClass}>
+                                  Sua mensagem está pronta
+                                </h3>
+                                <p className="mt-1.5 text-sm text-ink-soft">Você ainda pode editar no WhatsApp.</p>
+                                <figure className="mt-5 rounded-3xl bg-tint-mist p-4">
+                                  <figcaption className="sr-only">Prévia da mensagem</figcaption>
+                                  <motion.div
+                                    initial={{ y: 10, scale: 0.97 }}
+                                    animate={{ y: 0, scale: 1 }}
+                                    transition={reduce ? { duration: 0 } : { ...spring, delay: 0.1 }}
+                                    className="ml-auto max-w-[92%] origin-bottom-right rounded-2xl rounded-br-md border border-primary-200 bg-white px-4 py-3 text-[14px] leading-relaxed whitespace-pre-line text-ink"
+                                  >
+                                    {message}
+                                  </motion.div>
+                                </figure>
+                                <button
+                                  type="button"
+                                  onClick={() => goTo(0)}
+                                  className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-primary transition-colors hover:bg-tint-lilac hover:text-primary-hover focus-visible:shadow-focus"
+                                >
+                                  <Pencil aria-hidden className="size-3.5" />
+                                  Editar
+                                </button>
+                              </div>
+                            )}
+                          </motion.div>
+                        </AnimatePresence>
+                      </div>
+
+                      {done ? (
+                        <div className="mt-3 space-y-3">
+                          <motion.a
+                            href={whatsappLink(message)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            transition={t}
+                            className="flex h-14 w-full items-center justify-center gap-2.5 rounded-full bg-whatsapp px-6 text-base font-medium text-white shadow-[0_8px_24px_rgb(15_122_59/24%)] transition-colors hover:bg-whatsapp-hover focus-visible:shadow-focus"
+                          >
+                            <WhatsAppIcon className="size-5" />
+                            Enviar pelo WhatsApp
+                            <span className="sr-only"> (abre em nova aba)</span>
+                          </motion.a>
+                          <Button variant="ghost" onClick={back} className="px-3">
+                            <ArrowLeft aria-hidden className="size-4" />
+                            Voltar
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="mt-3 flex items-center justify-between gap-3">
+                          <Button variant="ghost" onClick={back} disabled={step === 0} className="px-3">
+                            <ArrowLeft aria-hidden className="size-4" />
+                            Voltar
+                          </Button>
+                          <Button type="submit" variant="primary">
+                            {step === steps.length - 1 ? "Ver mensagem" : step === 0 && !name.trim() ? "Pular" : "Continuar"}
+                            <ArrowRight aria-hidden className="size-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </form>
+
+                    <p className="flex items-center justify-center gap-2 border-t border-line-soft px-5 py-4 text-center text-sm text-ink-soft sm:px-8">
+                      <ShieldCheck aria-hidden className="size-4 text-primary" />
+                      Nada do que você escreve aqui é salvo.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </Container>
     </Section>
