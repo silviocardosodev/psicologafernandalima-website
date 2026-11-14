@@ -6,9 +6,9 @@ import type { Quote, QuoteTheme } from "@/lib/quotes";
 import { site } from "@/lib/site";
 
 /**
- * Renders a quote as a PNG (pre-rendered at build time). Used by:
- * - /cartoes/[id]: 1080×1350 Instagram post, shared/downloaded from the site;
- * - /[dor]/opengraph-image: 1200×630 link preview of each pain page.
+ * Renders a quote as a PNG, pre-rendered at build time. Used by /[dor]/opengraph-image
+ * (1200×630 link preview of each pain page); the 1080×1350 "post" format is kept for
+ * future Instagram material.
  */
 export const POST_SIZE = { width: 1080, height: 1350 } as const;
 export const OG_SIZE = { width: 1200, height: 630 } as const;

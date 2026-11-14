@@ -24,13 +24,10 @@ Para posts sobre um tema específico, mande direto para a página daquele tema:
 | Autocobrança | `https://www.psicologafernandalima.com.br/autocobranca?utm_source=instagram&utm_medium=post&utm_campaign=autocobranca` |
 | Ansiedade | `https://www.psicologafernandalima.com.br/ansiedade?utm_source=instagram&utm_medium=post&utm_campaign=ansiedade` |
 
-Ao colar o link no WhatsApp ou no Direct, a prévia mostra o cartão de frase do tema.
+Ao colar o link no WhatsApp ou no Direct, a prévia mostra uma frase do tema (edite em `src/lib/quotes.ts`).
 
-### Cartões de frase
-Os cartões ficam em **Frases pra guardar** (página inicial e páginas de tema). Cada um tem a imagem pronta para post (1080×1350):
-`https://www.psicologafernandalima.com.br/cartoes/<id>` — ids: `vida-boa-pesa`, `nem-todo-pensamento`, `desacelerar`, `descansar`, `valor`, `ansiedade-alarme`.
-Quando alguém compartilha pelo site, o link que vai junto leva `utm_source=compartilhar&utm_medium=cartao`.
-Para trocar ou criar frases, edite `src/lib/quotes.ts`.
+### Depoimentos e vídeos
+Para trocar depoimentos ou vídeos, edite `src/lib/content.ts`. Cada vídeo novo precisa de uma miniatura em `public/videos/<id-do-youtube>.webp`.
 
 ## 2. O que é medido (Vercel Web Analytics — sem cookies)
 
@@ -42,8 +39,8 @@ Para trocar ou criar frases, edite `src/lib/quotes.ts`.
 | `identify_optin` | Marca/desmarca "Incluir o que marquei" | `enabled` |
 | `booking_open` / `booking_step` / `booking_submit` | Uso do assistente de mensagem | passo (1–4) |
 | `faq_open` / `faq_search` / `faq_filter` | Uso das Dúvidas | id da pergunta, se a busca teve resultado, categoria |
-| `quote_share` | Compartilhar um cartão de frase | id da frase, forma (`imagem`, `link`, `copiar`) |
-| `quote_download` | Baixar um cartão de frase | id da frase |
+| `video_play` | Dar play em um vídeo | id do vídeo no YouTube |
+| `instagram_open` | Clique em qualquer link do Instagram | `section` (instagram, footer…) |
 
 **LGPD:** nenhum sintoma, frase marcada, nome, motivo ou texto digitado é enviado. Não há cookies, então não é preciso banner.
 
@@ -74,11 +71,11 @@ Abrir o **link de preview da Vercel** do PR no celular.
 - [ ] Marcar uma frase no quiz: é anunciado como "selecionado".
 - [ ] No assistente, deixar o período em branco e avançar: o erro é lido junto da pergunta.
 
-### Cartões e páginas de tema
-- [ ] No celular, tocar em **Compartilhar** num cartão → abre a tela de compartilhar com a **imagem** → postar nos Stories funciona.
-- [ ] No navegador do Instagram: se Compartilhar não abrir, aparece "Frase e link copiados".
+### Vídeos, Instagram e páginas de tema
+- [ ] Tocar em um vídeo → ele toca dentro do site (no iPhone, pode abrir em tela cheia).
+- [ ] "Seguir @fernandalima.psi" → abre o perfil (no app do Instagram, se instalado).
 - [ ] Abrir `/mente-acelerada`, `/autocobranca` e `/ansiedade`: o botão "Quero conversar" abre o WhatsApp.
-- [ ] Colar o link de uma página de tema no WhatsApp → a prévia mostra o cartão de frase.
+- [ ] Colar o link de uma página de tema no WhatsApp → a prévia mostra a frase do tema.
 
 ### Movimento reduzido (Ajustes → Acessibilidade → Movimento → Reduzir movimento)
 - [ ] Recarregar: nada pisca nem fica invisível; as linhas do topo aparecem já "calmas".

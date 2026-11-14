@@ -8,14 +8,19 @@ import { track } from "@/lib/analytics";
 
 /**
  * Vercel Web Analytics + Speed Insights (cookieless) and one delegated listener that
- * records every WhatsApp click with the section it came from — no per-button wiring.
+ * records every WhatsApp (and Instagram) click with the section it came from — no per-button wiring.
  */
 export function AnalyticsProvider() {
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
-      const link = (event.target as HTMLElement | null)?.closest?.<HTMLAnchorElement>(
-        'a[href*="wa.me"], a[href*="api.whatsapp.com"]',
-      );
+      const target = event.target as HTMLElement | null;
+      const insta = target?.closest?.<HTMLAnchorElement>('a[href*="instagram.com"]');
+      if (insta) {
+        const where = insta.closest("section[id]")?.id ?? (insta.closest("footer") ? "footer" : "outro");
+        track("instagram_open", { section: where });
+        return;
+      }
+      const link = target?.closest?.<HTMLAnchorElement>('a[href*="wa.me"], a[href*="api.whatsapp.com"]');
       if (!link) return;
       const section =
         link.dataset.analyticsSection ??

@@ -95,6 +95,8 @@
 
 > **Entregue:** 6 cartões (1080×1350, gerados no build) com Compartilhar (imagem → link → copiar) e Baixar, na home e nas páginas de tema; 3 páginas com sinais em 1ª pessoa, "por que acontece", 3 passos da terapia, mini "sobre", frases, 2 dúvidas, CTA e links entre temas; prévia de link (Open Graph) com o cartão do tema; sitemap, JSON-LD `WebPage` + `BreadcrumbList` + `FAQPage`; eventos `quote_share` e `quote_download`. A mensagem do WhatsApp continua neutra (não cita o tema), seguindo a regra de LGPD.
 
+> **Ajuste pós-Sprint 3 (pedido do cliente, 14/11/2026):** removidos a seção "Frases pra guardar" e o motivo de linhas atrás da foto do hero; adicionados **Depoimentos** (transcritos do site atual, sem nomes), **Vídeos** (YouTube, carregado só no clique) e **Instagram**. ⚠️ QA/ética: as orientações do CFP sobre publicidade de serviços psicológicos costumam vetar depoimentos de pacientes. Vale a Fernanda confirmar com o CRP-06 antes de publicar; a decisão de manter é dela.
+
 ---
 
 ## 4. Pendências para a Fernanda / cliente

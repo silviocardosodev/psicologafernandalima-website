@@ -7,12 +7,10 @@ import { ArrowRight, Plus } from "lucide-react";
 import { Footer } from "@/components/layout/Footer";
 import { FloatingActions } from "@/components/layout/FloatingActions";
 import { LandingHeader } from "@/components/layout/LandingHeader";
-import { QuoteCards } from "@/components/sections/QuoteCards";
 import { Container, Eyebrow, Section, SectionHeader } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { getPain, pains } from "@/lib/pains";
-import { quotes } from "@/lib/quotes";
 import { ctaLabel, site, whatsappLink } from "@/lib/site";
 
 export const dynamicParams = false;
@@ -57,7 +55,6 @@ export default async function PainPage({ params }: Props) {
   if (!pain) notFound();
 
   const related = pains.filter((p) => p.slug !== pain.slug);
-  const painQuotes = quotes.filter((q) => q.pain === pain.slug);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -234,10 +231,6 @@ export default async function PainPage({ params }: Props) {
             </Reveal>
           </Container>
         </section>
-
-        {painQuotes.length > 0 && (
-          <QuoteCards items={painQuotes} id="frases" description="Salve esta para os dias difíceis — ou mande para quem precisa." />
-        )}
 
         {/* Two specific doubts, native disclosure (works without JS). */}
         <Section aria-labelledby="duvidas-titulo">

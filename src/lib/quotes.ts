@@ -1,6 +1,6 @@
 /**
- * "Frases pra guardar": short, original lines in Fernanda's voice, made to be saved
- * and shared on Instagram (4:5 post). CFP: no promises, no diagnosis, always signed
+ * Short, original lines in Fernanda's voice, used as the link preview image
+ * (Open Graph) of each pain page. CFP: no promises, no diagnosis, always signed
  * with name + CRP.
  */
 export type QuoteTheme = "lilac" | "brand" | "white";
@@ -24,9 +24,4 @@ export const quotes: Quote[] = [
 
 export function getQuote(id: string) {
   return quotes.find((q) => q.id === id);
-}
-
-/** Public URL of the pre-rendered PNG (1080×1350). */
-export function quoteImagePath(id: string) {
-  return `/cartoes/${id}`;
 }

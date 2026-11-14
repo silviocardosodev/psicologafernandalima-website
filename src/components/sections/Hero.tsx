@@ -7,7 +7,6 @@ import {
   m,
   useMotionValue,
   useReducedMotion,
-  useScroll,
   useSpring,
   useTransform,
   type MotionValue,
@@ -76,106 +75,9 @@ function FloatingTag({
   );
 }
 
-/* ------------------------------------------------------------------------------------
- * "Mente acelerada → calma" motif.
- * A few thin lilac strokes start as a tangled scribble (busy mind) and, as the hero
- * scrolls out, fade/flatten while smooth parallel waves draw in (calm). SSR markup is
- * identical for everyone: reduced motion only zeroes durations and pins the scroll-linked
- * values to the calm end state (equal output ranges), never branching initial/animate.
- * ---------------------------------------------------------------------------------- */
-
-type Stroke = { d: string; color: string; opacity: number; width: number };
-
-const TANGLE: Stroke[] = [
-  { d: "M30 120 C80 40 140 200 190 90 S260 30 230 150 S120 190 200 60 S350 120 300 170 S250 60 370 100", color: "#747ff5", opacity: 0.58, width: 2.0 },
-  { d: "M20 160 C70 90 110 70 150 150 S230 210 260 110 S190 40 160 120 S290 220 340 130 S330 60 385 150", color: "#a5a8ff", opacity: 0.8, width: 1.75 },
-  { d: "M40 80 C100 130 90 200 170 170 S210 50 280 90 S330 210 250 180 S200 100 320 70 S370 160 360 190", color: "#c9c3ff", opacity: 0.87, width: 2.25 },
-  { d: "M60 190 C40 120 130 100 120 60 S60 140 180 130 S300 40 270 130 S360 200 390 90", color: "#747ff5", opacity: 0.43, width: 1.75 },
-  { d: "M90 100 C140 60 210 230 240 120 S140 80 300 150", color: "#a5a8ff", opacity: 0.65, width: 2.0 },
-];
-
-/** Same gentle sine for every line, so they read as parallel. */
-const wave = (y: number) =>
-  `M-60 ${y} Q-20 ${y - 7} 20 ${y} T100 ${y} T180 ${y} T260 ${y} T340 ${y} T420 ${y} T500 ${y}`;
-
-const WAVES: Stroke[] = [
-  { d: wave(92), color: "#c9c3ff", opacity: 0.87, width: 1.75 },
-  { d: wave(116), color: "#a5a8ff", opacity: 0.72, width: 2.0 },
-  { d: wave(140), color: "#747ff5", opacity: 0.51, width: 2.0 },
-  { d: wave(164), color: "#a5a8ff", opacity: 0.72, width: 1.75 },
-  { d: wave(188), color: "#c9c3ff", opacity: 0.8, width: 2.25 },
-];
-
-function MindMotif({ progress }: { progress: MotionValue<number> }) {
-  const reduce = useReducedMotion();
-  const calm = !!reduce;
-
-  // Tangle unwinds: fades out and flattens vertically.
-  const tangleOpacity = useTransform(progress, [0, 0.45], calm ? [0, 0] : [1, 0]);
-  const tangleScaleY = useTransform(progress, [0, 0.45], calm ? [0.4, 0.4] : [1, 0.4]);
-  // Waves draw in slowly with a soft horizontal drift.
-  const wavesLength = useTransform(progress, [0.08, 0.6], calm ? [1, 1] : [0, 1]);
-  const wavesOpacity = useTransform(progress, [0.05, 0.3], calm ? [1, 1] : [0, 1]);
-  const wavesX = useTransform(progress, [0, 1], calm ? [0, 0] : [0, -28]);
-
-  return (
-    <svg
-      aria-hidden
-      focusable="false"
-      viewBox="0 0 400 400"
-      fill="none"
-      className="pointer-events-none absolute -inset-x-[6%] top-0 h-auto w-[112%] overflow-visible opacity-70 lg:opacity-100"
-    >
-      <m.g style={{ opacity: tangleOpacity, scaleY: tangleScaleY, originX: 0.5, originY: 0.35 }}>
-        {/* One-time intro: draws in quickly, then settles slightly calmer. */}
-        <m.g
-          initial={{ opacity: 0, rotate: -5, scale: 1.06 }}
-          animate={{ opacity: 0.85, rotate: 0, scale: 1 }}
-          transition={reduce ? { duration: 0 } : { duration: 1.6, ease: EASE }}
-          style={{ originX: 0.5, originY: 0.5 }}
-        >
-          {TANGLE.map((s, i) => (
-            <m.path
-              key={i}
-              d={s.d}
-              stroke={s.color}
-              strokeOpacity={s.opacity}
-              strokeWidth={s.width}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              vectorEffect="non-scaling-stroke"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={reduce ? { duration: 0 } : { duration: 0.9, delay: i * 0.1, ease: [0.4, 0, 0.2, 1] }}
-            />
-          ))}
-        </m.g>
-      </m.g>
-
-      <m.g style={{ opacity: wavesOpacity, x: wavesX }}>
-        {WAVES.map((s, i) => (
-          <m.path
-            key={i}
-            d={s.d}
-            stroke={s.color}
-            strokeOpacity={s.opacity}
-            strokeWidth={s.width}
-            strokeLinecap="round"
-            vectorEffect="non-scaling-stroke"
-            style={{ pathLength: wavesLength }}
-          />
-        ))}
-      </m.g>
-    </svg>
-  );
-}
-
 export function Hero() {
   const reduce = useReducedMotion();
   const press = reduce ? { duration: 0 } : SPRING;
-
-  const sectionRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
 
   // Pointer parallax: raw values stay 0 unless a fine pointer is present and motion is allowed.
   const parallaxOn = useRef(false);
@@ -219,7 +121,6 @@ export function Hero() {
 
   return (
     <section
-      ref={sectionRef}
       id="inicio"
       aria-labelledby="hero-titulo"
       onPointerMove={onPointerMove}
@@ -277,9 +178,6 @@ export function Hero() {
           >
             <div className="absolute inset-[6%] top-[5%] rounded-t-full rounded-b-[2rem] bg-white/35" />
           </m.div>
-
-          {/* Busy-mind → calm strokes: above the arch, behind the cut-out portrait. */}
-          <MindMotif progress={scrollYProgress} />
 
           <m.div style={{ x: photoX, y: photoY }} className="relative aspect-square">
             <Image
