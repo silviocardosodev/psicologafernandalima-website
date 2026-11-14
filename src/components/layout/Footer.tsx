@@ -72,6 +72,10 @@ export function Footer({ base = "" }: { base?: string }) {
               {pain.name}
             </Link>
           ))}
+          <span aria-hidden className="h-4 w-px bg-line" />
+          <Link href="/produtos" className={linkClass}>
+            Para psicólogas: FL PsicoFlow
+          </Link>
         </nav>
 
         <div className="mt-6 space-y-3 border-t border-line-soft pt-6 text-[13px] leading-relaxed text-ink-muted">

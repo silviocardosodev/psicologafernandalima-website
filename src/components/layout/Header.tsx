@@ -231,6 +231,16 @@ export function Header() {
                   </li>
                 );
               })}
+              {/* Separate page (not an in-page section), after a thin divider. */}
+              <li aria-hidden className="mx-1.5 h-4 w-px bg-line" />
+              <li>
+                <Link
+                  href="/produtos"
+                  className="relative z-10 block rounded-full px-2.5 py-1.5 text-[14px] whitespace-nowrap text-ink-soft transition-colors duration-300 ease-out-soft hover:text-ink focus-visible:shadow-focus xl:px-3"
+                >
+                  Produtos
+                </Link>
+              </li>
             </ul>
           </nav>
 
@@ -344,6 +354,23 @@ export function Header() {
                       </m.li>
                     );
                   })}
+                  <m.li
+                    initial={{ opacity: 0, x: 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={reduce ? { duration: 0 } : { ...SPRING, delay: 0.08 + navItems.length * 0.05 }}
+                    className="mt-2 border-t border-line-soft pt-3"
+                  >
+                    <Link
+                      href="/produtos"
+                      onClick={close}
+                      className="group block rounded-2xl px-3 py-3 transition-colors duration-300 ease-out-soft hover:bg-tint-mist focus-visible:shadow-focus"
+                    >
+                      <span className="block text-[22px] leading-tight font-[650] tracking-[-0.03em] text-ink transition-colors duration-300 group-hover:text-primary">
+                        Produtos
+                      </span>
+                      <span className="mt-0.5 block text-sm text-ink-muted">Para psicólogas</span>
+                    </Link>
+                  </m.li>
                 </ul>
               </nav>
 

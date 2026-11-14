@@ -10,7 +10,18 @@ import { ctaLabel, site, whatsappLink } from "@/lib/site";
  * Light header for the pain landing pages (no scroll-spy, no drawer):
  * brand → home, "Ver o site" link, and the same "Quero conversar" CTA as everywhere.
  */
-export function LandingHeader() {
+export function LandingHeader({
+  cta = ctaLabel,
+  ctaShort,
+  message,
+}: {
+  /** Button label (defaults to "Quero conversar"). */
+  cta?: string;
+  /** Shorter label for phones, when `cta` is long. */
+  ctaShort?: string;
+  /** Pre-filled WhatsApp message (defaults to the neutral site message). */
+  message?: string;
+} = {}) {
   return (
     <header className="sticky top-0 z-40 border-b border-line-soft/80 bg-white/85 backdrop-blur-md">
       <Container className="flex h-[var(--header-height)] items-center justify-between gap-4">
@@ -31,13 +42,20 @@ export function LandingHeader() {
             Ver o site completo
           </Link>
           <a
-            href={whatsappLink()}
+            href={whatsappLink(message)}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-4 text-sm font-medium whitespace-nowrap text-white shadow-[0_8px_22px_rgb(79_70_229/20%)] transition-[background-color,transform] duration-150 hover:-translate-y-px hover:bg-primary-hover focus-visible:shadow-focus active:translate-y-px sm:px-5"
           >
             <WhatsAppIcon className="size-4" />
-            {ctaLabel}
+            {ctaShort ? (
+              <>
+                <span className="sm:hidden">{ctaShort}</span>
+                <span className="hidden sm:inline">{cta}</span>
+              </>
+            ) : (
+              cta
+            )}
             <span className="sr-only"> pelo WhatsApp (abre em nova aba)</span>
           </a>
         </nav>
