@@ -95,7 +95,7 @@ export function Identify() {
 
         <div className="mx-auto mt-12 max-w-4xl">
           <Reveal delay={0.05}>
-            <ul className="grid gap-3 sm:gap-4 md:grid-cols-2">
+            <ul data-private className="grid gap-3 sm:gap-4 md:grid-cols-2">
               {cards.map((card) => {
                 const on = selected.includes(card.id);
                 return (
@@ -171,6 +171,7 @@ export function Identify() {
                   <div className="mt-6 grid gap-5 md:grid-cols-[1fr_auto] md:items-end">
                     <div className="min-w-0">
                       <label
+                        data-private
                         htmlFor={`${uid}-incluir`}
                         className="inline-flex cursor-pointer items-center gap-3 text-[15px] text-ink"
                       >

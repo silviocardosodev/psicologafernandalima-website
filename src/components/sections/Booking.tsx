@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Container, Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
+import { LeadCapture } from "@/components/sections/LeadCapture";
 import { track } from "@/lib/analytics";
 import { ctaLabel, whatsappLink } from "@/lib/site";
 import { useRadioKeys } from "@/lib/useRadioKeys";
@@ -206,7 +207,7 @@ export function Booking() {
             </div>
           </Reveal>
 
-          <div id={panelId}>
+          <div id={panelId} data-private>
             <AnimatePresence initial={false}>
               {open && (
                 <m.div
@@ -558,6 +559,9 @@ export function Booking() {
               )}
             </AnimatePresence>
           </div>
+
+          {/* Only once the database is connected (see docs/ADMIN.md); otherwise the form would have nowhere to go. */}
+          {process.env.NEXT_PUBLIC_SUPABASE_URL && <LeadCapture />}
         </div>
       </Container>
     </Section>

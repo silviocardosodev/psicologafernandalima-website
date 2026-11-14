@@ -41,6 +41,8 @@
   --color-success: #166534;
   --color-warning-bg: #fff5e1;
   --color-warning: #8a3c0b;
+  --color-danger-bg: #fef3f2;
+  --color-danger: #b42318;
   --color-whatsapp: #0f7a3b;
   --color-whatsapp-hover: #0b6430;
 
@@ -94,6 +96,8 @@
   --color-success-bg: var(--color-success-bg);
   --color-warning: var(--color-warning);
   --color-warning-bg: var(--color-warning-bg);
+  --color-danger: var(--color-danger);
+  --color-danger-bg: var(--color-danger-bg);
   --color-whatsapp: var(--color-whatsapp);
   --color-whatsapp-hover: var(--color-whatsapp-hover);
 

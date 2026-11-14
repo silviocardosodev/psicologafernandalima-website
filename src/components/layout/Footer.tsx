@@ -91,8 +91,11 @@ export function Footer({ base = "" }: { base?: string }) {
             .
           </p>
           <p>
-            Este site não usa cookies e não armazena o que você marca ou escreve. As mensagens são enviadas por você,
-            pelo WhatsApp.
+            Este site não usa cookies. As visitas são contadas de forma anônima, e o que você marca ou escreve nas
+            mensagens não é salvo.{" "}
+            <Link href="/privacidade" className="underline decoration-line-hover underline-offset-4 transition-colors hover:text-primary">
+              Privacidade
+            </Link>
           </p>
           <p>
             © {year} {site.name} · {site.crp}
