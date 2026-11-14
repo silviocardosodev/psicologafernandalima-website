@@ -2,79 +2,206 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { useEffect, useRef, type PointerEvent, type ReactNode } from "react";
+import {
+  m,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
-import styles from "./Hero.module.css";
+import { ButtonLink } from "@/components/ui/Button";
+import { Container } from "@/components/ui/Section";
+import { cn } from "@/lib/utils";
+import { ctaLabel, site, whatsappLink } from "@/lib/site";
+
+const EASE = [0.22, 1, 0.36, 1] as const;
+const SPRING = { type: "spring", stiffness: 300, damping: 22 } as const;
+
+/** Maps the normalised pointer offset (-0.5…0.5) to a pixel shift at a given depth. */
+function useDepth(value: MotionValue<number>, depth: number) {
+  return useTransform(value, (v) => v * depth);
+}
+
+/**
+ * Small tag floating by the portrait. `initial`/`animate` are identical on server and
+ * client; reduced motion only changes the transition (no entrance delay, no float).
+ * It is never hidden (no opacity:0). The outer layer follows the pointer parallax, the
+ * inner one runs a gentle float limited to 3 cycles in total (WCAG 2.2.2).
+ */
+function FloatingTag({
+  children,
+  className,
+  tone,
+  delay,
+  drift = 6,
+  x,
+  y,
+}: {
+  children: ReactNode;
+  className?: string;
+  tone: string;
+  delay: number;
+  drift?: number;
+  x: MotionValue<number>;
+  y: MotionValue<number>;
+}) {
+  const reduce = useReducedMotion();
+
+  return (
+    <m.div className={cn("absolute z-10", className)} style={{ x, y }}>
+      <m.div
+        initial={{ y: 8, scale: 0.96 }}
+        animate={{ y: 0, scale: 1 }}
+        transition={reduce ? { duration: 0 } : { duration: 0.7, delay, ease: EASE }}
+      >
+        <m.span
+          className={cn(
+            "block rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-primary-deep shadow-[0_6px_24px_rgb(79_70_229/8%)]",
+            tone,
+          )}
+          animate={{ y: [0, -drift, 0] }}
+          transition={
+            reduce ? { duration: 0 } : { duration: 6, delay: delay + 0.7, repeat: 2, ease: "easeInOut" }
+          }
+        >
+          {children}
+        </m.span>
+      </m.div>
+    </m.div>
+  );
+}
 
 export function Hero() {
+  const reduce = useReducedMotion();
+  const press = reduce ? { duration: 0 } : SPRING;
+
+  // Pointer parallax: raw values stay 0 unless a fine pointer is present and motion is allowed.
+  const parallaxOn = useRef(false);
+  const px = useMotionValue(0);
+  const py = useMotionValue(0);
+  const sx = useSpring(px, { stiffness: 80, damping: 20, mass: 0.6 });
+  const sy = useSpring(py, { stiffness: 80, damping: 20, mass: 0.6 });
+
+  const archX = useDepth(sx, -10);
+  const archY = useDepth(sy, -8);
+  const photoX = useDepth(sx, 12);
+  const photoY = useDepth(sy, 8);
+  const tagX = useDepth(sx, 22);
+  const tagY = useDepth(sy, 16);
+
+  // Parallax only on desktop: fine pointer + wide viewport, and motion allowed.
+  useEffect(() => {
+    const query = window.matchMedia("(pointer: fine) and (min-width: 1024px)");
+    const update = () => {
+      parallaxOn.current = query.matches && !reduce;
+      if (!parallaxOn.current) {
+        px.set(0);
+        py.set(0);
+      }
+    };
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, [reduce, px, py]);
+
+  const onPointerMove = (event: PointerEvent<HTMLElement>) => {
+    if (!parallaxOn.current || event.pointerType !== "mouse") return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    px.set((event.clientX - rect.left) / rect.width - 0.5);
+    py.set((event.clientY - rect.top) / rect.height - 0.5);
+  };
+  const onPointerLeave = () => {
+    px.set(0);
+    py.set(0);
+  };
+
   return (
-    <section id="inicio" className={styles["fernanda-hero"]}>
-      <div className={styles["fernanda-hero__ambient"]}>
-        <div
-          className={`${styles["fernanda-hero__glow"]} ${styles["fernanda-hero__glow--purple"]}`}
-        />
-        <div
-          className={`${styles["fernanda-hero__glow"]} ${styles["fernanda-hero__glow--blue"]}`}
-        />
-      </div>
+    <section
+      id="inicio"
+      aria-labelledby="hero-titulo"
+      onPointerMove={onPointerMove}
+      onPointerLeave={onPointerLeave}
+      className="relative isolate overflow-hidden bg-soft pt-[calc(var(--header-height)+3rem)] pb-20 sm:pt-[calc(var(--header-height)+4rem)] sm:pb-28 lg:pb-32"
+    >
+      {/* One very soft blob for depth */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-40 left-1/2 -z-10 size-[560px] -translate-x-1/2 rounded-full bg-tint-violet opacity-70 blur-3xl lg:left-auto lg:right-[-10%] lg:translate-x-0"
+      />
 
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.65, ease: "easeOut" }}
-        className={styles["fernanda-hero__panel"]}
-      >
-        <div className={styles["fernanda-hero__content"]}>
-          <h1 className={styles["fernanda-hero__title"]}>
-            Você não precisa carregar tudo sozinha
+      <Container className="grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+        <div className="max-w-xl">
+          <h1
+            id="hero-titulo"
+            className="text-[clamp(2.25rem,4.6vw,4rem)] leading-[1.08] font-[650] tracking-[-0.035em] text-balance text-ink"
+          >
+            Sua cabeça não para. Nem quando você pode parar.
           </h1>
-
-          <p className={styles["fernanda-hero__description"]}>
-            Um espaço seguro para olhar para si mesma com mais gentileza,
-            clareza e acolhimento.
+          <p className="mt-6 max-w-md text-[17px] leading-relaxed text-ink-soft sm:text-lg">
+            Terapia online para mulheres que dão conta de tudo — e estão cansadas de dar conta sozinhas.
           </p>
 
-          <div className={styles["fernanda-hero__actions"]}>
+          <div className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-4">
+            <m.div whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} transition={press}>
+              <ButtonLink
+                href={whatsappLink()}
+                external
+                size="lg"
+                className="hover:translate-y-0 active:translate-y-0"
+              >
+                {ctaLabel}
+              </ButtonLink>
+            </m.div>
             <Link
-              href="#agendar"
-              className={`${styles["fernanda-hero__action"]} ${styles["fernanda-hero__action--primary"]}`}
+              href="#como-funciona"
+              className="group inline-flex items-center gap-2 rounded-sm text-[15px] text-ink-soft transition-colors duration-300 ease-out-soft hover:text-primary"
             >
-              Agendar sessão
-              <ArrowRight className={styles["fernanda-hero__action-icon"]} />
-            </Link>
-
-            <Link
-              href="#para-quem-e"
-              className={`${styles["fernanda-hero__action"]} ${styles["fernanda-hero__action--secondary"]}`}
-            >
-              Conheça meu trabalho
+              Como funciona
+              <ArrowRight
+                aria-hidden
+                className="size-4 transition-transform duration-300 ease-out-soft group-hover:translate-x-1 group-focus-visible:translate-x-1"
+              />
             </Link>
           </div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 28 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut", delay: 0.12 }}
-          className={styles["fernanda-hero__media"]}
-        >
-          <div className={styles["fernanda-hero__photo-block"]}>
-            <div className={styles["fernanda-hero__photo-frame"]}>
-              <div className={styles["fernanda-hero__photo-viewport"]}>
-                <Image
-                  src="/psicologa-fernanda-lima.png"
-                  alt="Fernanda Lima, psicóloga"
-                  fill
-                  priority
-                  className={styles["fernanda-hero__photo"]}
-                  sizes="(max-width: 1024px) 100vw, 640px"
-                />
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>
+        <div className="relative mx-auto w-full max-w-[420px] lg:mr-0 lg:max-w-[480px]">
+          {/* Soft lilac arch behind the cut-out portrait */}
+          <m.div
+            aria-hidden
+            style={{ x: archX, y: archY }}
+            className="absolute inset-x-[7%] top-[10%] bottom-0 -z-10 rounded-t-full rounded-b-[2.5rem] bg-linear-to-b from-tint-violet via-tint-violet to-tint-lilac"
+          >
+            <div className="absolute inset-[6%] top-[5%] rounded-t-full rounded-b-[2rem] bg-white/35" />
+          </m.div>
+
+          <m.div style={{ x: photoX, y: photoY }} className="relative aspect-square">
+            <Image
+              src="/psicologa-fernanda-lima.webp"
+              alt="Fernanda Lima, psicóloga, sorrindo"
+              fill
+              priority
+              quality={70}
+              sizes="(min-width: 1024px) 480px, (min-width: 480px) 420px, 90vw"
+              className="object-contain object-bottom"
+            />
+          </m.div>
+
+          <FloatingTag
+            tone="bg-white"
+            delay={0.3}
+            x={tagX}
+            y={tagY}
+            className="bottom-6 left-2 sm:bottom-10 sm:left-auto sm:-right-4"
+          >
+            {site.crp} · TCC e ACT
+          </FloatingTag>
+        </div>
+      </Container>
     </section>
   );
 }

@@ -1,25 +1,51 @@
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
-import { About } from "@/components/sections/About";
-import { AboutMe } from "@/components/sections/AboutMe";
-import { Benefits } from "@/components/sections/Benefits";
-import { CTA } from "@/components/sections/CTA";
+import { FloatingActions } from "@/components/layout/FloatingActions";
 import { Hero } from "@/components/sections/Hero";
-import { Identification } from "@/components/sections/Identification";
+import { Identify } from "@/components/sections/Identify";
+import { Turning } from "@/components/sections/Turning";
+import { AboutMe } from "@/components/sections/AboutMe";
+import { HowItWorks } from "@/components/sections/HowItWorks";
+import { FAQ } from "@/components/sections/FAQ";
+import { Booking } from "@/components/sections/Booking";
+import { Testimonials } from "@/components/sections/Testimonials";
+import { Videos } from "@/components/sections/Videos";
+import { InstagramSection } from "@/components/sections/InstagramSection";
+import { faqItems } from "@/lib/faq";
+
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqItems.map((item) => ({
+    "@type": "Question",
+    name: item.question,
+    acceptedAnswer: { "@type": "Answer", text: item.answer },
+  })),
+};
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-transparent">
+    <>
       <Header />
-      <main>
+      <main id="conteudo">
         <Hero />
-        <Identification />
+        <Identify />
+        <Turning />
         <AboutMe />
-        <Benefits />
-        <About />
-        <CTA />
+        <Testimonials />
+        <HowItWorks />
+        <Videos />
+        <InstagramSection />
+        <FAQ />
+        <Booking />
       </main>
       <Footer />
-    </div>
+      <FloatingActions />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+    </>
   );
 }
