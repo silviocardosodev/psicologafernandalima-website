@@ -17,7 +17,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Section";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { cn } from "@/lib/utils";
-import { ctaLabel, navItems, site, whatsappLink } from "@/lib/site";
+import { ctaLabel, navItems, showProducts, site, whatsappLink } from "@/lib/site";
 
 const DRAWER_ID = "menu-mobile";
 const SPRING = { type: "spring", stiffness: 300, damping: 22 } as const;
@@ -232,15 +232,19 @@ export function Header() {
                 );
               })}
               {/* Separate page (not an in-page section), after a thin divider. */}
-              <li aria-hidden className="mx-1.5 h-4 w-px bg-line" />
-              <li>
-                <Link
-                  href="/produtos"
-                  className="relative z-10 block rounded-full px-2.5 py-1.5 text-[14px] whitespace-nowrap text-ink-soft transition-colors duration-300 ease-out-soft hover:text-ink focus-visible:shadow-focus xl:px-3"
-                >
-                  Produtos
-                </Link>
-              </li>
+              {showProducts && (
+                <>
+                  <li aria-hidden className="mx-1.5 h-4 w-px bg-line" />
+                  <li>
+                    <Link
+                      href="/produtos"
+                      className="relative z-10 block rounded-full px-2.5 py-1.5 text-[14px] whitespace-nowrap text-ink-soft transition-colors duration-300 ease-out-soft hover:text-ink focus-visible:shadow-focus xl:px-3"
+                    >
+                      Produtos
+                    </Link>
+                  </li>
+                </>
+              )}
             </ul>
           </nav>
 
@@ -354,6 +358,7 @@ export function Header() {
                       </m.li>
                     );
                   })}
+                  {showProducts && (
                   <m.li
                     initial={{ opacity: 0, x: 24 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -371,6 +376,7 @@ export function Header() {
                       <span className="mt-0.5 block text-sm text-ink-muted">Para psicólogas</span>
                     </Link>
                   </m.li>
+                  )}
                 </ul>
               </nav>
 

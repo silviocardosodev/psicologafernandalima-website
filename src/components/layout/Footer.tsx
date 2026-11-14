@@ -5,7 +5,7 @@ import { BrandMark } from "@/components/ui/BrandMark";
 import { Container } from "@/components/ui/Section";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { pains } from "@/lib/pains";
-import { navItems, site, whatsappLink } from "@/lib/site";
+import { navItems, showProducts, site, whatsappLink } from "@/lib/site";
 
 const linkClass =
   "inline-block rounded-sm text-sm text-ink-soft transition-[color,transform] duration-300 ease-out-soft hover:-translate-y-px hover:text-primary";
@@ -72,10 +72,14 @@ export function Footer({ base = "" }: { base?: string }) {
               {pain.name}
             </Link>
           ))}
-          <span aria-hidden className="h-4 w-px bg-line" />
-          <Link href="/produtos" className={linkClass}>
-            Para psicólogas: FL PsicoFlow
-          </Link>
+          {showProducts && (
+            <>
+              <span aria-hidden className="h-4 w-px bg-line" />
+              <Link href="/produtos" className={linkClass}>
+                Para psicólogas: FL PsicoFlow
+              </Link>
+            </>
+          )}
         </nav>
 
         <div className="mt-6 space-y-3 border-t border-line-soft pt-6 text-[13px] leading-relaxed text-ink-muted">
