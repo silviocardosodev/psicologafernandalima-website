@@ -61,6 +61,8 @@ alter table public.leads enable row level security;
 
 -- Ninguém além do servidor (service_role) mexe nas tabelas.
 revoke all on public.site_events, public.leads from anon, authenticated;
+-- Explícito, porque projetos novos podem vir com "expor tabelas novas" desligado.
+grant select, insert, update, delete on public.site_events, public.leads to service_role;
 
 -- ---------------------------------------------------------------------------
 -- Resumo do painel: tudo agregado no banco (o Supabase limita 1000 linhas por
