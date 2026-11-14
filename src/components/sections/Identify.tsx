@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
@@ -8,6 +9,7 @@ import { Container, Section, SectionHeader } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { track } from "@/lib/analytics";
+import { pains } from "@/lib/pains";
 import { ctaLabel, whatsappLink } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -213,6 +215,20 @@ export function Identify() {
 
           <div className="mt-8 space-y-1.5 text-center text-sm leading-relaxed text-ink-muted">
             <p>Também acompanho: ansiedade, pânico, relacionamentos e luto.</p>
+            <p>
+              Quer ler mais?{" "}
+              {pains.map((pain, index) => (
+                <span key={pain.slug}>
+                  {index > 0 && " · "}
+                  <Link
+                    href={`/${pain.slug}`}
+                    className="rounded-sm font-medium text-primary underline decoration-primary-200 underline-offset-4 transition-colors duration-300 hover:decoration-primary"
+                  >
+                    {pain.name}
+                  </Link>
+                </span>
+              ))}
+            </p>
             <p>Sinais não são diagnóstico. Nada do que você marca é salvo.</p>
           </div>
         </div>

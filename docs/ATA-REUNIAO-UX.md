@@ -89,9 +89,11 @@
 9. Performance: LazyMotion, server components, Lighthouse real no preview da Vercel.
 10. Testes em aparelho: navegador do Instagram (iOS/Android) e VoiceOver.
 
-### Sprint 3 — Crescimento
+### Sprint 3 — Crescimento ✅ entregue
 11. Cartões de frase "salváveis" no formato do Instagram, com botão Compartilhar.
 12. Landing pages por dor (`/mente-acelerada`, `/autocobranca`, `/ansiedade`) como destino de posts específicos.
+
+> **Entregue:** 6 cartões (1080×1350, gerados no build) com Compartilhar (imagem → link → copiar) e Baixar, na home e nas páginas de tema; 3 páginas com sinais em 1ª pessoa, "por que acontece", 3 passos da terapia, mini "sobre", frases, 2 dúvidas, CTA e links entre temas; prévia de link (Open Graph) com o cartão do tema; sitemap, JSON-LD `WebPage` + `BreadcrumbList` + `FAQPage`; eventos `quote_share` e `quote_download`. A mensagem do WhatsApp continua neutra (não cita o tema), seguindo a regra de LGPD.
 
 ---
 

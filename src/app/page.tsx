@@ -8,7 +8,13 @@ import { AboutMe } from "@/components/sections/AboutMe";
 import { HowItWorks } from "@/components/sections/HowItWorks";
 import { FAQ } from "@/components/sections/FAQ";
 import { Booking } from "@/components/sections/Booking";
+import { QuoteCards } from "@/components/sections/QuoteCards";
 import { faqItems } from "@/lib/faq";
+import { quotes } from "@/lib/quotes";
+
+const homeQuotes = ["vida-boa-pesa", "nem-todo-pensamento", "descansar"]
+  .map((id) => quotes.find((q) => q.id === id))
+  .filter((q) => q !== undefined);
 
 const faqJsonLd = {
   "@context": "https://schema.org",
@@ -30,6 +36,7 @@ export default function Home() {
         <Turning />
         <AboutMe />
         <HowItWorks />
+        <QuoteCards items={homeQuotes} />
         <FAQ />
         <Booking />
       </main>

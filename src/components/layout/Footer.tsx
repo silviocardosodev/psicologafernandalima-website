@@ -4,6 +4,7 @@ import { Instagram } from "lucide-react";
 import { BrandMark } from "@/components/ui/BrandMark";
 import { Container } from "@/components/ui/Section";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
+import { pains } from "@/lib/pains";
 import { navItems, site, whatsappLink } from "@/lib/site";
 
 const linkClass =
@@ -15,7 +16,8 @@ const contactClass =
 const telClass =
   "font-medium text-ink underline decoration-primary-200 underline-offset-4 transition-colors duration-300 hover:decoration-primary";
 
-export function Footer() {
+/** `base` prefixes the in-page anchors ("/" on the pain pages, so "#sobre" becomes "/#sobre"). */
+export function Footer({ base = "" }: { base?: string }) {
   const year = new Date().getFullYear();
 
   return (
@@ -26,7 +28,7 @@ export function Footer() {
 
       <Container className="py-12 sm:py-14">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-          <Link href="#inicio" className="group flex items-center gap-3 self-start rounded-md lg:self-auto">
+          <Link href={`${base}#inicio`} className="group flex items-center gap-3 self-start rounded-md lg:self-auto">
             <BrandMark className="w-8 transition-transform duration-500 ease-out-soft group-hover:-rotate-6" />
             <span className="flex flex-col leading-tight">
               <span className="text-[15px] font-medium text-ink">{site.name}</span>
@@ -38,7 +40,7 @@ export function Footer() {
             <ul className="flex flex-wrap gap-x-7 gap-y-3">
               {navItems.map((item) => (
                 <li key={item.id}>
-                  <Link href={`#${item.id}`} className={linkClass}>
+                  <Link href={`${base}#${item.id}`} className={linkClass}>
                     {item.label}
                   </Link>
                 </li>
@@ -63,7 +65,16 @@ export function Footer() {
           </ul>
         </div>
 
-        <div className="mt-10 space-y-3 border-t border-line-soft pt-6 text-[13px] leading-relaxed text-ink-muted">
+        <nav aria-label="Temas" className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+          <span className="text-ink-muted">Temas:</span>
+          {pains.map((pain) => (
+            <Link key={pain.slug} href={`/${pain.slug}`} className={linkClass}>
+              {pain.name}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="mt-6 space-y-3 border-t border-line-soft pt-6 text-[13px] leading-relaxed text-ink-muted">
           <p className="text-ink-soft">
             Em crise ou emergência:{" "}
             <a href="tel:188" className={telClass}>

@@ -15,7 +15,9 @@ export type AnalyticsEvent =
   | { name: "booking_submit"; props?: undefined }
   | { name: "faq_open"; props: { id: string } }
   | { name: "faq_search"; props: { has_results: boolean } }
-  | { name: "faq_filter"; props: { category: string } };
+  | { name: "faq_filter"; props: { category: string } }
+  | { name: "quote_share"; props: { id: string; method: "imagem" | "link" | "copiar" } }
+  | { name: "quote_download"; props: { id: string } };
 
 export function track<E extends AnalyticsEvent>(name: E["name"], props?: E["props"]) {
   try {

@@ -15,6 +15,23 @@ Use estes links no lugar do link "puro" do site. Assim o Vercel Analytics mostra
 
 > Dica: troque `<tema-do-post>` por algo curto, sem acentos, ex.: `mente-acelerada`, `culpa-ao-descansar`.
 
+### Páginas por tema (Sprint 3)
+Para posts sobre um tema específico, mande direto para a página daquele tema:
+
+| Tema | Link |
+|---|---|
+| Mente acelerada | `https://www.psicologafernandalima.com.br/mente-acelerada?utm_source=instagram&utm_medium=post&utm_campaign=mente-acelerada` |
+| Autocobrança | `https://www.psicologafernandalima.com.br/autocobranca?utm_source=instagram&utm_medium=post&utm_campaign=autocobranca` |
+| Ansiedade | `https://www.psicologafernandalima.com.br/ansiedade?utm_source=instagram&utm_medium=post&utm_campaign=ansiedade` |
+
+Ao colar o link no WhatsApp ou no Direct, a prévia mostra o cartão de frase do tema.
+
+### Cartões de frase
+Os cartões ficam em **Frases pra guardar** (página inicial e páginas de tema). Cada um tem a imagem pronta para post (1080×1350):
+`https://www.psicologafernandalima.com.br/cartoes/<id>` — ids: `vida-boa-pesa`, `nem-todo-pensamento`, `desacelerar`, `descansar`, `valor`, `ansiedade-alarme`.
+Quando alguém compartilha pelo site, o link que vai junto leva `utm_source=compartilhar&utm_medium=cartao`.
+Para trocar ou criar frases, edite `src/lib/quotes.ts`.
+
 ## 2. O que é medido (Vercel Web Analytics — sem cookies)
 
 | Evento | Quando dispara | Dados enviados |
@@ -25,6 +42,8 @@ Use estes links no lugar do link "puro" do site. Assim o Vercel Analytics mostra
 | `identify_optin` | Marca/desmarca "Incluir o que marquei" | `enabled` |
 | `booking_open` / `booking_step` / `booking_submit` | Uso do assistente de mensagem | passo (1–4) |
 | `faq_open` / `faq_search` / `faq_filter` | Uso das Dúvidas | id da pergunta, se a busca teve resultado, categoria |
+| `quote_share` | Compartilhar um cartão de frase | id da frase, forma (`imagem`, `link`, `copiar`) |
+| `quote_download` | Baixar um cartão de frase | id da frase |
 
 **LGPD:** nenhum sintoma, frase marcada, nome, motivo ou texto digitado é enviado. Não há cookies, então não é preciso banner.
 
@@ -54,6 +73,12 @@ Abrir o **link de preview da Vercel** do PR no celular.
 - [ ] Abrir o menu: o VoiceOver **não** sai do menu para o fundo da página.
 - [ ] Marcar uma frase no quiz: é anunciado como "selecionado".
 - [ ] No assistente, deixar o período em branco e avançar: o erro é lido junto da pergunta.
+
+### Cartões e páginas de tema
+- [ ] No celular, tocar em **Compartilhar** num cartão → abre a tela de compartilhar com a **imagem** → postar nos Stories funciona.
+- [ ] No navegador do Instagram: se Compartilhar não abrir, aparece "Frase e link copiados".
+- [ ] Abrir `/mente-acelerada`, `/autocobranca` e `/ansiedade`: o botão "Quero conversar" abre o WhatsApp.
+- [ ] Colar o link de uma página de tema no WhatsApp → a prévia mostra o cartão de frase.
 
 ### Movimento reduzido (Ajustes → Acessibilidade → Movimento → Reduzir movimento)
 - [ ] Recarregar: nada pisca nem fica invisível; as linhas do topo aparecem já "calmas".
