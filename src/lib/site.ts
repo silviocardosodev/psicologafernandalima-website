@@ -1,3 +1,9 @@
+/**
+ * Página /produtos (FL PsicoFlow): fora do menu, do rodapé, do sitemap e do Google até o produto estar
+ * pronto. A página continua acessível pelo endereço direto. Mude para true para publicar.
+ */
+export const showProducts = false;
+
 export const site = {
   name: "Fernanda Lima",
   title: "Psicóloga Fernanda Lima | Terapia online para mulheres com a mente acelerada",

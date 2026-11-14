@@ -19,7 +19,7 @@ import { LandingHeader } from "@/components/layout/LandingHeader";
 import { Container, Eyebrow, Section, SectionHeader } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
-import { site, whatsappLink } from "@/lib/site";
+import { showProducts, site, whatsappLink } from "@/lib/site";
 
 const title = "FL PsicoFlow: a rotina clínica num só lugar";
 const description =
@@ -31,6 +31,8 @@ export const metadata: Metadata = {
   alternates: { canonical: `${site.url}/produtos` },
   openGraph: { type: "website", url: `${site.url}/produtos`, title, description, locale: "pt_BR" },
   twitter: { card: "summary_large_image", title, description },
+  // Hidden while FL PsicoFlow is in closed beta (see showProducts).
+  ...(showProducts ? {} : { robots: { index: false, follow: false } }),
 };
 
 /** Professionals, not patients: this message never carries health data. */
